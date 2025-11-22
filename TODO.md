@@ -1,4 +1,4 @@
-# TODO: Make Left Navigation on transactionPage.html Visible and Functional like homePage.html
-
-- [ ] Update transactionPage.js to add setActiveNav method and set activeNav to 'Transactions'
-- [ ] Verify the navigation works by testing the page
+- [ ] Update settingsPage.html to match homePage layout: left sidebar nav, main content with settings form, right sidebar accounts. Add Tailwind, Vue, Lucide scripts. Remove Font Awesome.
+- [ ] Update settingsPage.css to minimal styles like homePage.css: add font-face, button styles, remove extensive custom styles.
+- [ ] Update settingsPage.js to include navItems, activeNav, setActiveNav method, and adjust data structures to match homePage.
+- [ ] Test the updated settingsPage to ensure design matches homePage.

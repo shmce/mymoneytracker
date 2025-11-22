@@ -5,12 +5,12 @@ createApp({
     setup() {
 
         /*  sidebar  */
-        const activeNav = ref('Transactions');
+        const activeNav = ref('Records');
         const navItems = ref([
-            { name: 'Dashboard', icon: 'home' },
-            { name: 'Transactions', icon: 'credit-card' },
-            { name: 'Records', icon: 'file-text' },
-            { name: 'Settings', icon: 'settings' },
+            { name: 'Dashboard'},
+            { name: 'Records'},
+            { name: 'Transactions'},
+            { name: 'Settings'},
         ]);
 
         /*  screen state  */
@@ -135,7 +135,10 @@ createApp({
         function setActiveNav(item) {
             activeNav.value = item;
             if (item === 'Dashboard') window.location.href = '../homePage/homePage.html';
+            if (item === 'Transactions') window.location.href = '../transactionPage/transactionPage.html';
+            if (item === 'Settings') window.location.href = '../settingsPage/settingsPage.html';
         }
+        
 
         /*  formatters  */
         function formatCurrency(v) {

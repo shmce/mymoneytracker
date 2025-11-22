@@ -11,14 +11,16 @@ createApp({
         const activeNav = ref('Dashboard');
         const navItems = ref([
             { name: 'Dashboard', icon: 'home' },
-            { name: 'Transactions', icon: 'credit-card' },
             { name: 'Records', icon: 'file-text' },
+            { name: 'Transactions', icon: 'repeat' },
             { name: 'Settings', icon: 'settings' },
         ]);
 
         // --- Data Properties ---
         const activeTab = ref('Expense');
         const currentInput = ref('0');
+        
+        
         
         // "From" account
         const selectedAccount = ref(null);
@@ -124,8 +126,11 @@ createApp({
 
         const setActiveNav = (item) => {
             activeNav.value = item;
+            if (item === 'Records') {
+                window.location.href = '../recordPage/recordPage.html';
+            }
             if (item === 'Transactions') {
-                window.location.href = '../transactions/transactionPage.html';
+                window.location.href = '../transactionPage/transactionPage.html';
             }
         };
 
