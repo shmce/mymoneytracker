@@ -1,33 +1,24 @@
 <?php
-include 'db_connect.php';
+require_once '../db_connect.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+$email = $_POST['email'];
+$pass  = $_POST['password'];
 
-    $sql = "SELECT * FROM users WHERE email = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+$sql = "SELECT id, name, password FROM users WHERE email = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$res = $stmt->get_result();
 
-    if ($result->num_rows === 1) {
-        $user = $result->fetch_assoc();
-
-        if (password_verify($password, $user['password'])) {
-            echo "Login successful! Welcome, " . htmlspecialchars($user['name']);
-            // Optional: start a session
-            // session_start();
-            // $_SESSION['user_id'] = $user['id'];
-            // header("Location: dashboard.html");
-        } else {
-            echo "Incorrect password.";
-        }
-    } else {
-        echo "No account found with that email.";
+if ($res->num_rows === 1) {
+    $user = $res->fetch_assoc();
+    if (password_verify($pass, $user['password'])) {
+        // Session already started in db_connect.php
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['name']    = $user['name'];
+        header("Location: ../homePage/homePage.html");
+        exit;
     }
-
-    $stmt->close();
-    $conn->close();
 }
+echo "Wrong e-mail or password.";
 ?>

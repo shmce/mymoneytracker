@@ -4,7 +4,7 @@ const { createApp, ref, computed, onMounted } = Vue;
 createApp({
     setup() {
 
-        // Sidebar Navigation
+        /*  sidebar  */
         const activeNav = ref('Transactions');
         const navItems = ref([
             { name: 'Dashboard', icon: 'home' },
@@ -13,216 +13,148 @@ createApp({
             { name: 'Settings', icon: 'settings' },
         ]);
 
-        
-        // --- Data Properties ---
+        /*  screen state  */
         const activeTab = ref('Expense');
         const currentInput = ref('0');
-        
-        // "From" account
         const selectedAccount = ref(null);
-        // "To" account (New)
         const transferToAccount = ref(null);
-
         const currentDateTime = ref('');
-        const keypadKeys = ref(['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '<']);
-        
-        const accounts = ref([
-            {
-                platform: 'Cash',
-                availableAssets: 5000.00
-            },
-            {
-                platform: 'Bank - BDO',
-                availableAssets: 100000.00
-            },
-            {
-                platform: 'GCash',
-                availableAssets: 2500.50
-            }
-        ]);
+        const keypadKeys = ref(['1','2','3','4','5','6','7','8','9','.','0','<']);
 
-        const saveAccountsToStorage = () => {
-            localStorage.setItem('myMoneyAccounts', JSON.stringify(accounts.value));
-        };
+        /*  accounts now come from MySQL  */
+        const accounts = ref([]);
 
-        const loadAccountsFromStorage = () => {
-            const stored = localStorage.getItem('myMoneyAccounts');
-            if (stored) {
-                accounts.value = JSON.parse(stored);
-            }
-        };
-
-        // --- Computed Properties ---
+        /*  helpers  */
         const formattedAmount = computed(() => {
-            let [integer, decimal] = currentInput.value.split('.');
-            integer = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            
-            if (decimal === undefined) return `${integer}.00`;
-            else if (decimal.length === 1) return `${integer}.${decimal}0`;
-            else return `${integer}.${decimal.substring(0, 2)}`;
+            let [int, dec] = currentInput.value.split('.');
+            int = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            if (!dec) return `${int}.00`;
+            return dec.length === 1 ? `${int}.${dec}0` : `${int}.${dec.slice(0,2)}`;
         });
 
-        // --- Methods ---
-        const setTab = (tabName) => {
-            activeTab.value = tabName;
-            // Reset inputs when switching tabs
+        /*  NEW: fetch accounts for logged-in user  */
+        async function loadAccounts() {
+            const res = await fetch('../getAccounts.php');
+            accounts.value = await res.json();
+        }
+        /*  NEW: save updated balances to server  */
+        async function saveAccounts() {
+            await fetch('../saveAccounts.php', {
+                method : 'POST',
+                headers: {'Content-Type':'application/json'},
+                body   : JSON.stringify(accounts.value)
+            });
+        }
+
+        /*  NEW: send log line to DB  */
+        function logToDB(msg) {
+            fetch('../logReceiver.php', {
+                method : 'POST',
+                headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                body   : 'log=' + encodeURIComponent(msg)
+            });
+        }
+
+        /*  tab switch  */
+        function setTab(tab) {
+            activeTab.value = tab;
             currentInput.value = '0';
-        };
+        }
 
-        const executeExpense = () => {
-            const amount = parseFloat(currentInput.value);
+        /*  expense  */
+        async function executeExpense() {
+            const amt = parseFloat(currentInput.value);
+            if (amt <= 0)  { alert('Amount > 0 please'); return; }
+            if (!selectedAccount.value) { alert('Pick an account'); return; }
+            const acc = accounts.value.find(a => a.platformNumber === selectedAccount.value);
+            if (!acc) { alert('Account not found'); return; }
+            if (acc.availableAssets < amt) { alert('Insufficient funds'); return; }
 
-            // 1. Validation
-            if (amount <= 0) {
-                alert("Please enter an amount greater than 0.");
-                return;
-            }
-            if (!selectedAccount.value) {
-                alert("Please select an account.");
-                return;
-            }
-
-            // 2. Find Account Object
-            const account = accounts.value.find(acc => acc.platformNumber === selectedAccount.value);
-
-            // 3. Check Funds
-            if (account.availableAssets < amount) {
-                alert("Insufficient funds in " + account.platform);
-                return;
-            }
-
-            // 4. Execute Math
-            account.availableAssets -= amount;
-
-            // 5. Save to localStorage
-            saveAccountsToStorage();
-
-            // 6. Success Message & Reset
-            alert(`Successfully recorded expense of ₱${formatCurrency(amount)} from ${account.platform}`);
+            acc.availableAssets -= amt;
+            await saveAccounts();                 // <-- MySQL
+            logToDB(`Expense: ₱${amt} from ${acc.platform}`);
+            alert(`Expense recorded: ₱${amt}`);
             currentInput.value = '0';
-        };
+        }
 
-        const executeIncome = () => {
-            const amount = parseFloat(currentInput.value);
+        /*  income  */
+        async function executeIncome() {
+            const amt = parseFloat(currentInput.value);
+            if (amt <= 0)  { alert('Amount > 0 please'); return; }
+            if (!selectedAccount.value) { alert('Pick an account'); return; }
+            const acc = accounts.value.find(a => a.platformNumber === selectedAccount.value);
+            if (!acc) { alert('Account not found'); return; }
 
-            // 1. Validation
-            if (amount <= 0) {
-                alert("Please enter an amount greater than 0.");
-                return;
-            }
-            if (!selectedAccount.value) {
-                alert("Please select an account.");
-                return;
-            }
-
-            // 2. Find Account Object
-            const account = accounts.value.find(acc => acc.platformNumber === selectedAccount.value);
-
-            // 3. Execute Math
-            account.availableAssets += amount;
-
-            // 4. Save to localStorage
-            saveAccountsToStorage();
-
-            // 5. Success Message & Reset
-            alert(`Successfully recorded income of ₱${formatCurrency(amount)} to ${account.platform}`);
+            acc.availableAssets += amt;
+            await saveAccounts();
+            logToDB(`Income: ₱${amt} to ${acc.platform}`);
+            alert(`Income recorded: ₱${amt}`);
             currentInput.value = '0';
-        };
+        }
 
-        const executeTransfer = () => {
-            const amount = parseFloat(currentInput.value);
-
-            // 1. Validation
-            if (amount <= 0) {
-                alert("Please enter an amount greater than 0.");
-                return;
-            }
+        /*  transfer  */
+        async function executeTransfer() {
+            const amt = parseFloat(currentInput.value);
+            if (amt <= 0)  { alert('Amount > 0 please'); return; }
             if (!selectedAccount.value || !transferToAccount.value) {
-                alert("Please select both a FROM and TO account.");
-                return;
+                alert('Choose FROM and TO accounts'); return;
             }
             if (selectedAccount.value === transferToAccount.value) {
-                alert("Cannot transfer to the same account.");
-                return;
+                alert('Cannot transfer to same account'); return;
             }
+            const src = accounts.value.find(a => a.platformNumber === selectedAccount.value);
+            const dst = accounts.value.find(a => a.platformNumber === transferToAccount.value);
+            if (!src || !dst) { alert('Account not found'); return; }
+            if (src.availableAssets < amt) { alert('Insufficient funds'); return; }
 
-            // 2. Find Account Objects
-            const sourceAccount = accounts.value.find(acc => acc.platformNumber === selectedAccount.value);
-            const destAccount = accounts.value.find(acc => acc.platformNumber === transferToAccount.value);
-
-            // 3. Check Funds
-            if (sourceAccount.availableAssets < amount) {
-                alert("Insufficient funds in " + sourceAccount.platform);
-                return;
-            }
-
-            // 4. Execute Math
-            sourceAccount.availableAssets -= amount;
-            destAccount.availableAssets += amount;
-
-            // 5. Save to localStorage
-            saveAccountsToStorage();
-
-            // 6. Success Message & Reset
-            alert(`Successfully transferred ₱${formatCurrency(amount)} from ${sourceAccount.platform} to ${destAccount.platform}`);
+            src.availableAssets -= amt;
+            dst.availableAssets += amt;
+            await saveAccounts();
+            logToDB(`Transfer: ₱${amt} from ${src.platform} to ${dst.platform}`);
+            alert(`Transfer complete: ₱${amt}`);
             currentInput.value = '0';
-            transferToAccount.value = null; // Reset destination
-        };
+            transferToAccount.value = null;
+        }
 
-        const pressKey = (key) => {
+        /*  keypad  */
+        function pressKey(key) {
             if (key === '<') {
-                currentInput.value = currentInput.value.slice(0, -1);
-                if (currentInput.value === '') currentInput.value = '0';
+                currentInput.value = currentInput.value.slice(0, -1) || '0';
             } else if (key === '.') {
                 if (!currentInput.value.includes('.')) currentInput.value += '.';
             } else {
-                if (currentInput.value === '0' && key !== '.') currentInput.value = key;
+                if (currentInput.value === '0') currentInput.value = key;
                 else {
-                    const parts = currentInput.value.split('.');
-                    if (parts.length < 2 || parts[1].length < 2) currentInput.value += key;
+                    const [a, b] = currentInput.value.split('.');
+                    if (!b || b.length < 2) currentInput.value += key;
                 }
             }
-        };
-        
-        const setActiveNav = (item) => {
+        }
+
+        /*  nav  */
+        function setActiveNav(item) {
             activeNav.value = item;
-            if (item === 'Dashboard') {
-                window.location.href = '../homePage/homePage.html';
-            }
-            // Add other navigation logic if needed
-        };
+            if (item === 'Dashboard') window.location.href = '../homePage/homePage.html';
+        }
 
-        const formatCurrency = (value) => {
-            return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        };
+        /*  formatters  */
+        function formatCurrency(v) {
+            return '₱ ' + v.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
 
-        onMounted(() => {
-            // Load accounts from localStorage
-            loadAccountsFromStorage();
-
+        /*  life-cycle  */
+        onMounted(async () => {
+            await loadAccounts();          // ← from MySQL
             currentDateTime.value = 'Today, 10:02AM';
-            // Render all lucide icons
             lucide.createIcons();
         });
 
+        /*  expose to template  */
         return {
-            activeNav,
-            navItems,
-            activeTab,
-            currentInput,
-            selectedAccount,
-            transferToAccount, // Export this so HTML can see it
-            currentDateTime,
-            keypadKeys,
-            accounts,
-            formattedAmount,
-            setTab,
-            pressKey,
-            formatCurrency,
-            executeExpense,
-            executeIncome,
-            executeTransfer, // Export the function
-            setActiveNav
+            activeNav, navItems, activeTab, currentInput, selectedAccount,
+            transferToAccount, currentDateTime, keypadKeys, accounts,
+            formattedAmount, setTab, pressKey, executeExpense,
+            executeIncome, executeTransfer, setActiveNav
         };
     }
 }).mount('#app');
