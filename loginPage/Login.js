@@ -11,6 +11,13 @@ createApp({
             messageTimeout: null
         };
     },
+    mounted() {
+        // Check for error parameter in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error') === 'invalid') {
+            this.showMessage('Wrong email or password. Please try again.', 5000);
+        }
+    },
     methods: {
         togglePasswordVisibility() {
             this.passwordVisible = !this.passwordVisible;
@@ -25,13 +32,5 @@ createApp({
                 this.showMessage = false;
             }, duration);
         },
-        login() {
-            if (this.email && this.password) {
-                this.showMessage(`Attempting login with email: ${this.email}`, 5000);
-                // In a real app, you would send this to a backend API.
-            } else {
-                this.showMessage('Please fill in both email and password.', 4000);
-            }
-        }
     }
 }).mount('#app');
