@@ -1,7 +1,12 @@
+@font-face {
+    font-family: 'Satoshi' ;
+    src: url(satoshi/Satoshi-Medium.otf);
+}
+
 /* GENERAL STYLES */
 #app {
     display: flex;
-    font-family: Arial, sans-serif;
+    font-family: 'Satoshi', sans-serif;
     height: 100vh;
     background-color: #f4f4f4;
     overflow: hidden;

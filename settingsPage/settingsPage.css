@@ -1,7 +1,8 @@
 @font-face {
     font-family: 'Satoshi' ;
-    src: url(../Fonts/satoshi/Satoshi-Medium.otf);
+    src: url(satoshi/Satoshi-Medium.otf);
 }
+
 
 /* Custom font and base styling */
 body {
