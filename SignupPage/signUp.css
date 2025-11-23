@@ -1,0 +1,282 @@
+@font-face {
+    font-family: 'Satoshi' ;
+    src: url(satoshi/Satoshi-Medium.otf);
+}
+
+/* --- Global Styles (from App.vue) --- */
+:root {
+    /* Colors based on your image */
+    --primary-green: #4CAF50;
+    --accent-green: #4CAF50;
+    --bg-dark: #111111;
+    --form-bg: #1e1e1e;
+    --input-bg: #383838;
+    --text-primary: #E0E0E0;
+    --text-secondary: #AAAAAA;
+    --border-color: #444444;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Satoshi', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    background-image: radial-gradient(rgb(48, 47, 47) 2px, transparent 2px);
+    background-size: 30px 30px;
+    animation: move 8s linear infinite;
+}
+
+/* This flex container centers the form on the page */
+#app-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+/* --- Form Styles (from SignupForm.vue) --- */
+.signup-container {
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(30, 30, 30, 0.95) 50%, rgba(26, 26, 26, 0.8) 100%);
+    background-color: var(--form-bg);
+    padding: 2.5rem 3rem;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 900px;
+    /* Subtle glow from the image */
+    box-shadow: 0 0 100px rgba(36, 90, 64, 0.664);
+    border: 1px solid var(--border-color);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.logo {
+    width: 80px;
+    height: 80px;
+}
+
+.logo img {
+    width: 100%;
+    height: 100%;
+}
+
+.header h1 {
+    font-weight: 500;
+    font-size: 1.75rem;
+    color: var(--text-primary);
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.subtitle .accent {
+    color: var(--accent-green);
+    font-weight: 500;
+}
+
+/* Form Grid Layout */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2.5rem; /* row-gap column-gap */
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+}
+
+/* General Input Styling */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+input::placeholder {
+    color: #666;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 8px rgba(77, 208, 145, 0.5);
+}
+
+/* Password Field */
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    padding-right: 3rem; /* Space for the icon */
+}
+
+.eye-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    width: 20px;
+    height: 20px;
+    /* Note: In this HTML-only version, the icon is not clickable */
+}
+
+/* Date of Birth Field */
+.dob-group {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.dob-group select {
+    flex: 2;
+}
+
+.dob-group .dob-day,
+.dob-group .dob-year{
+    flex: 1;
+    text-align: center;
+}
+
+/* Gender Field */
+.gender-group {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    padding: 0.8rem 0;
+}
+
+.gender-group label {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 400;
+}
+
+/* Custom Radio Button */
+input[type="radio"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: var(--input-bg);
+    margin: 0;
+    font: inherit;
+    color: var(--text-secondary);
+    width: 1.15em;
+    height: 1.15em;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    transform: translateY(-0.075em);
+    display: grid;
+    place-content: center;
+}
+input[type="radio"]::before {
+    content: "";
+    width: 0.65em;
+    height: 0.65em;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    background-color: var(--primary-green);
+}
+input[type="radio"]:checked::before {
+    transform: scale(1);
+}
+input[type="radio"]:checked {
+    border-color: var(--primary-green);
+}
+
+/* Register Button */
+.register-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--primary-green);
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    margin-top: 2rem;
+}
+
+.register-btn:hover {
+    background-color: var(--accent-green);
+    box-shadow: 0 5px 15px rgba(77, 208, 145, 0.2);
+}
+
+/* Login Link */
+.login-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.login-link a {
+    color: var(--primary-green);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-link .arrow {
+    color: var(--primary-green);
+    font-weight: 600;
+    margin-left: 0.25rem;
+}
+
+/* Responsive (for smaller screens) */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .signup-container {
+        padding: 2rem 1.5rem;
+    }
+}
+
+
+@keyframes move {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 30px 30px;
+    }
+}

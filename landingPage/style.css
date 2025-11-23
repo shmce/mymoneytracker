@@ -1,0 +1,317 @@
+@font-face {
+    font-family: 'Satoshi' ;
+    src: url(satoshi/Satoshi-Medium.otf);
+}
+
+
+/* --- CSS Variables (Theme) --- */
+:root {
+    --color-light-bg: #f4f7f6;
+    --color-green: #689543;
+    --color-logo-green: #4c7d4c;
+    --color-dark: #222222;
+    --color-text-dark: #333;
+    --color-text-light: #ffffff;
+    --color-text-secondary: #555;
+    --font-family: 'Satoshi', sans-serif;
+}
+
+
+/* --- Global Reset & Base Styles --- */
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+body {
+    background-color: var(--color-light-bg);
+    color: var(--color-text-dark);
+    font-family: var(--font-family);
+    line-height: 1.6;
+}
+
+
+/* --- App Layout --- */
+.app-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 0 1rem; /* Tailwind 'px-4' */
+    overflow-x: hidden;
+}
+
+
+/* --- Header & Navigation --- */
+.app-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 90px;
+    z-index: 50;
+}
+
+
+.logo {
+    position: absolute;
+    top: 1.5rem; /* Tailwind 'top-6' */
+    left: 1rem;  /* Tailwind 'left-4' */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.125rem; /* Tailwind 'text-lg' */
+    width: 70px; /* Tailwind 'w-11' */
+    height: 70px; /* Tailwind 'h-11' */
+    border-radius: 9999px; /* Tailwind 'rounded-full' */
+    color: var(--color-text-light);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Tailwind 'shadow-md' */
+}
+
+
+.logo-img {
+    width: 1.5rem; /* Tailwind 'w-6' */
+    height: 1.5rem; /* Tailwind 'h-6' */
+    /* Ensure the image fits within the circular logo container */
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* This will scale the image down to fit */
+    border-radius: 9999px; /* Make the image itself circular if it's not already */
+}
+
+
+.main-nav {
+    position: absolute;
+    top: 1.5rem; /* Tailwind 'top-6' */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Tailwind 'gap-2' */
+    padding: 0.75rem 1rem; /* Tailwind 'px-4 py-3' */
+    background-color: var(--color-dark);
+    color: var(--color-text-light);
+    border-radius: 9999px; /* Tailwind 'rounded-full' */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Tailwind 'shadow-lg' */
+}
+
+
+.nav-link {
+    color: var(--color-text-light);
+    font-weight: 500; /* Tailwind 'font-medium' */
+    padding: 0.5rem 0.25rem; /* Tailwind 'px-1 py-2' */
+    transition: color 0.3s ease;
+    text-decoration: none;
+}
+
+
+.nav-link:hover {
+    color: #689543;
+}
+
+
+.app-title {
+    font-size: 1rem; /* Tailwind 'text-base' */
+    font-weight: 700; /* Tailwind 'font-bold' */
+    display: none; /* Tailwind 'hidden' */
+}
+/*
+.signup-btn {
+    background-color: var(--color-light-bg);
+    color: var(--color-text-dark);
+    font-weight: 700;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+
+.signup-btn:hover {
+    background-color: #689543;
+    color: var(--color-text-light);
+}
+    */
+
+
+
+
+/* --- Hero Content --- */
+.hero-content {
+    text-align: center;
+    margin-top: 9rem; /* Tailwind 'mt-36' */
+    padding: 0 0.5rem; /* Tailwind 'px-2' */
+    z-index: 10;
+    position: relative;
+}
+
+.hero-content h1 {
+    font-size: 2.25rem; /* Tailwind 'text-4xl' */
+    line-height: 2.5rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+}
+
+
+.text-green {
+    color: #689543;
+}
+
+
+.subtitle {
+    font-size: 1.125rem; /* Tailwind 'text-lg' */
+    color: var(--color-text-secondary);
+    max-width: 42rem; /* Tailwind 'max-w-xl' */
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1rem; /* Tailwind 'mt-4' */
+}
+
+
+.cta-subtext {
+    font-size: 1.125rem; /* Tailwind 'text-lg' */
+    font-weight: 500; /* Tailwind 'font-medium' */
+    color: #689543;
+    margin-top: 2rem; /* Tailwind 'mt-8' */
+}
+
+
+.cta-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.50rem; /* Tailwind 'gap-3' */
+    background-color: #689543;
+    color: var(--color-text-light);
+    font-size: 1.125rem; /* Tailwind 'text-lg' */
+    font-weight: 700; /* Tailwind 'font-bold' */
+    padding: 0.75rem 2rem; /* Tailwind 'px-8 py-3' */
+    border: none;
+    border-radius: 9999px; /* Tailwind 'rounded-full' */
+    cursor: pointer;
+    margin-top: 1.25rem; /* Tailwind 'mt-5' */
+    box-shadow: 0 10px 15px -3px rgba(106, 190, 131, 0.4), 0 4px 6px -2px rgba(106, 190, 131, 0.4); /* Tailwind 'shadow-lg shadow-mmt-green/40' */
+    transition: all 0.3s ease;
+}
+
+
+.cta-button:hover {
+    transform: translateY(-3px); /* Tailwind 'hover:-translate-y-0.5' */
+    box-shadow: 0 20px 25px -5px rgba(106, 190, 131, 0.6), 0 10px 10px -5px rgba(106, 190, 131, 0.6); /* Tailwind 'hover:shadow-xl hover:shadow-mmt-green/60' */
+}
+
+
+.arrow-icon {
+    font-size: 1.5rem; /* Tailwind 'text-2xl' */
+    line-height: 1; /* Tailwind 'leading-none' */
+}
+
+
+/* --- Responsive Media Queries --- */
+
+
+/* Tailwind 'sm:' breakpoint (640px) */
+@media (min-width: 640px) {
+    .app-title {
+        display: inline; /* Tailwind 'sm:inline' */
+    }
+}
+
+
+/* Tailwind 'md:' breakpoint (768px) */
+@media (min-width: 768px) {
+    .app-container {
+        padding: 0 2rem; /* Tailwind 'md:px-8' */
+    }
+
+
+    .logo {
+        left: 2rem;  /* Tailwind 'md:left-8' */
+    }
+
+
+    .main-nav {
+        gap: 1.5rem; /* Tailwind 'md:gap-6' */
+        padding: 0.75rem 1.5rem; /* Tailwind 'md:px-6' */
+    }
+
+
+    .nav-link {
+        padding: 0.5rem 0.5rem; /* Tailwind 'md:px-2' */
+    }
+
+
+    .app-title {
+        font-size: 1.25rem; /* Tailwind 'md:text-xl' */
+    }
+
+
+    .signup-btn {
+        padding: 0.5rem 1.25rem; /* Tailwind 'md:px-5' */
+    }
+   
+    .hero-content {
+        margin-top: 10rem; /* Tailwind 'md:mt-40' */
+        padding: 0 2rem; /* Tailwind 'md:px-8' */
+    }
+
+
+    .hero-content h1 {
+        font-size: 3rem; /* Tailwind 'md:text-5xl' */
+        line-height: 1;
+    }
+}
+
+
+/* --- 3D Grid Floor (Your Original CSS) --- */
+.floor-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40vh; /* Height of the perspective area */
+    perspective: 300px; /* Adjusts the 3D effect */
+    z-index: 1;
+    overflow: hidden;
+}
+
+
+.grid-floor {
+    width: 190%; /* Wider than viewport for perspective */
+    height: 200%;
+    position: absolute;
+    bottom: 0;
+    left: -50%; /* Center the wide grid */
+    background-image:
+        linear-gradient(to right, rgba(0, 0, 0, 0.73) 5px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.73) 5px, transparent 1px);
+    background-size: 50px 50px;
+    transform: rotateX(70deg); /* Tilts the grid */
+    transform-origin: bottom center;
+}
+
+
+/* --- Fading overlay for the grid --- */
+.grid-fade {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 45vh; /* Should be slightly taller than floor-container */
+    /* FIX: Changed undefined '--color-black-bg' to '--color-light-bg' */
+    background: linear-gradient(to top, var(--color-light-bg) 20%, transparent 100%);
+    z-index: 2; /* Sits above grid, below content */
+    pointer-events: none; /* Allows clicking through */
+}
+
+@keyframes move {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 30px 30px;
+    }
+}

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <!-- Load Tailwind CSS for utility-first styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Vue.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="Login.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Message Box (Custom alert replacement) -->
+        <div v-if="showMessage" id="message-box" role="alert">{{ message }}</div>
+
+        <!-- Main Content Container: Centered Card with Rounded Corners -->
+        <div class="w-full max-w-8xl mx-auto rounded-xl overflow-hidden login-glow">
+
+        <!-- Grid Layout: 1 column on mobile, 2 columns on medium screens and up -->
+        <div class="grid grid-cols-1 md:grid-cols-2 bg-zinc-900 min-h-[600px]">
+
+            <!-- LEFT SIDE: Logo and Branding Section -->
+            <div class="left-panel-gradient flex flex-col items-center justify-center p-8 sm:p-12 text-white space-y-6 md:space-y-10">
+                <!-- Logo Image -->
+                <img src="../Images/Logo.svg" alt="MyMoney Tracker Logo" class="w-40 h-40 sm:w-56 sm:h-56">
+
+                <h1 class="text-4xl sm:text-5xl font-light tracking-wide">
+                    My<span class="font-bold text-[--primary-green]">Money</span>Tracker
+                </h1>
+            </div>
+
+            <!-- RIGHT SIDE: Login Form Section -->
+            <div class="p-8 sm:p-12 md:p-16 flex flex-col justify-center space-y-8 bg-zinc-800">
+                <h2 class="text-3xl font-light text-white">
+                    Log in to Start <span class="text-[--primary-green] font-semibold">Tracking</span>
+                </h2>
+
+                <!-- Separator line -->
+                <div class="relative flex items-center my-6">
+                    <div class="flex-grow border-t border-gray-600"></div>
+                </div>
+
+                <!-- FORM SECTION -->
+                <form action="Login.php" method="POST" id="loginForm">
+                    <div class="space-y-6">
+                        <!-- Email Input -->
+                        <div class="space-y-2">
+                            <label for="email" class="text-sm font-semibold block text-gray-300">EMAIL ADDRESS</label>
+                            <input type="email" v-model="email" id="email" name="email" placeholder="name@domain.com" class="custom-input" required>
+                        </div>
+
+                        <!-- Password Input -->
+                        <div class="space-y-2">
+                            <label for="password" class="text-sm font-semibold block text-gray-300">PASSWORD</label>
+                            <div class="password-input-group">
+                                <input :type="passwordVisible ? 'text' : 'password'" v-model="password" id="password-input" name="password" placeholder="••••••••••••" class="custom-input" required>
+                                <!-- Eye Icon SVG for show/hide functionality -->
+                                <svg @click="togglePasswordVisibility" class="password-toggle-icon w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path v-if="!passwordVisible" d="M2.06 12C3.76 7.42 8.5 4 12 4s8.24 3.42 9.94 8c-1.7 4.58-6.44 8-9.94 8s-8.24-3.42-9.94-8z"></path>
+                                    <path v-else d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-4.58 0-8.24-3.42-9.94-8a10.07 10.07 0 0 1 1.94-4.88M12 4c4.58 0 8.24 3.42 9.94 8a10.07 10.07 0 0 1-1.94 4.88"></path>
+                                    <line v-if="passwordVisible" x1="1" y1="1" x2="23" y2="23"></line>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </div>
+                        </div>
+                        <br>
+                        <!-- Login Button -->
+                        <button type="submit" class="w-full bg-[--primary-green] text-white p-3 font-semibold rounded-lg shadow-lg transition duration-200 hover:bg-green-600">
+                            Log In
+                        </button>
+                    </div>
+                </form>
+                    
+                    <p class="text-sm text-gray-400">
+                        Don't have an account?
+                        <a href="../SignupPage/signUp.html" class="font-semibold text-white hover:text-[--primary-green] transition duration-200">
+                            Sign up for MyMoney Tracker
+                        </a>
+                    </p>
+    </div>
+        </div>
+    </div>
+
+    </div>
+
+    <!-- Vue.js interactivity -->
+    <script src="Login.js"></script>
+</body>
+</html>
