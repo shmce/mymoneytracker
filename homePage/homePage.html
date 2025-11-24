@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyMoney Tracker</title>
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 2. Load Vue.js (v3) -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- 3. Load Chart.js for the graph -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- 4. Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide-icons"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="homePage.css">
+</head>
+<body class="bg-gray-100">
+
+    <!-- This is the main Vue.js application container -->
+    <div id="app" class="flex h-screen">
+
+        <!-- ===== 1. Left Sidebar Navigation ===== -->
+        <nav class="w-64 bg-white p-6 shadow-lg flex-shrink-0">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3 mb-10">
+                <div class="logo-container w-200 h-200 flex items-center justify-center rounded-full">
+                    <img src="../Images/Logo.svg" alt="MyMoney Tracker Logo" class="w-200 h-200">
+                </div>
+                <span class="text-xl font-bold text-gray-800">My<span class="text-green-600">Money</span> Tracker</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <ul class="space-y-3">
+                <li v-for="item in navItems" :key="item.name">
+                    <a @click.prevent="setActiveNav(item.name)"
+                       :class="[
+                           'flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-all',
+                           activeNav === item.name
+                               ? 'bg-green-100 text-green-700 font-semibold'
+                               : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                       ]">
+                        <i :data-lucide="item.icon" class="w-5 h-5"></i>
+                        <span>{{ item.name }}</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- ===== 2. Main Content Area ===== -->
+        <main class="flex-1 p-8 overflow-y-auto">
+
+
+            <!-- Top Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Total Money -->
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <span class="text-gray-500 text-sm">Total Money</span>
+                    <div class="flex items-center justify-between mt-2 w-full">
+    <span class="font-bold text-gray-800 text-[clamp(0.75rem, 6vw, 2.5rem)] leading-tight">
+        {{ formatCurrency(totalMoney) }}
+    </span>
+
+    <span class="text-xs font-semibold bg-green-100 text-green-600 px-2 py-1 rounded-full ml-2">
+        +10%
+    </span>
+</div>
+
+
+                </div>
+                <!-- This Month's Income -->
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <span class="text-gray-500 text-sm">This Month's Income</span>
+                    <div class="flex items-center justify-between mt-2 w-full">
+    <span class="font-bold text-gray-800 text-[clamp(0.75rem, 6vw, 2.5rem)] leading-tight">
+        {{ formatCurrency(monthlyIncome) }}
+    </span>
+
+    <span class="text-xs font-semibold bg-green-100 text-green-600 px-2 py-1 rounded-full ml-2">
+        +160%
+    </span>
+</div>
+
+
+                </div>
+                <!-- Expenses this month -->
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <span class="text-gray-500 text-sm">Expenses this month</span>
+                    <div class="flex items-center justify-between mt-2 w-full">
+    <span class="font-bold text-gray-800 text-[clamp(0.75rem, 6vw, 2.5rem)] leading-tight">
+        {{ formatCurrency(monthlyExpenses) }}
+    </span>
+
+    <span class="text-xs font-semibold bg-red-100 text-red-500 px-2 py-1 rounded-full ml-2">
+        -100%
+    </span>
+</div>
+
+                </div>
+            </div>
+
+            <!-- Spending Report -->
+            <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Spending Report</h2>
+                    <div class="flex items-center space-x-1 mt-3 sm:mt-0">
+                        <button v-for="filter in spendingFilters" :key="filter"
+                                @click="setSpendingFilter(filter)"
+                                :class="[
+                                    'px-3 py-1 text-sm rounded-md',
+                                    spendingReport.activeFilter === filter
+                                        ? 'bg-gray-200 text-gray-900 font-medium'
+                                        : 'text-gray-500 hover:bg-gray-100'
+                                ]">
+                            {{ filter }}
+                        </button>
+                    </div>
+                </div>
+                <!-- Chart Canvas -->
+                <div class="h-64">
+                    <canvas id="spendingChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Transaction History</h2>
+                    <div class="button-container">
+                        <button onclick="alert('Add Record functionality coming soon!')" class="button button-green">
+                            <i data-lucide="plus" class="button-icon"></i>
+                            <span class="button-text">+ Add Record</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transaction List Header -->
+                <div class="hidden md:grid grid-cols-5 gap-4 text-sm font-medium text-gray-500 mb-2 px-4">
+                    <span>Transaction</span>
+                    <span>ID</span>
+                    <span>Amount</span>
+                    <span>Date</span>
+                    <span>Category</span>
+                </div>
+
+                <!-- Transaction Items -->
+                <div class="space-y-4">
+                    <div v-for="tx in transactions" :key="tx.id"
+                         class="grid grid-cols-2 md:grid-cols-5 gap-4 items-center bg-gray-50 p-4 rounded-lg">
+
+                        <!-- Col 1: Transaction -->
+                        <div class="flex items-center space-x-3 col-span-2 md:col-span-1">
+                            <div :class="[tx.iconBg, 'w-10 h-10 rounded-full flex items-center justify-center']">
+                                <i :data-lucide="tx.icon" :class="tx.iconColor" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-800">{{ tx.name }}</div>
+                                <div class="text-sm text-gray-500 md:hidden">{{ tx.id }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: ID -->
+                        <div class="hidden md:block text-sm text-gray-500">{{ tx.id }}</div>
+
+                        <!-- Col 3: Amount -->
+                        <div :class="tx.amount > 0 ? 'text-green-600' : 'text-red-600'" class="font-semibold text-lg md:text-base md:text-left text-right">
+                            {{ formatAmount(tx.amount) }}
+                        </div>
+
+                        <!-- Col 4: Date -->
+                        <div class="text-sm text-gray-500">{{ tx.date }}</div>
+
+                        <!-- Col 5: Category -->
+                        <div class="text-sm text-gray-700 font-medium md:text-left text-right">{{ tx.category }}</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ===== 3. Right Sidebar (My Card) ===== -->
+        <aside class="w-65 bg-white p-8 shadow-lg flex-shrink-0 hidden lg:block">
+           <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-semibold text-gray-800">My Accounts</h2>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+                <button class="text-sm text-green-600 font-medium hover:text-green-700 transition">+ Add Accounts</button>
+            </div>
+            
+
+            <div class="space-y-4">
+                <div v-for="account in accounts" :key="account.platformNumber" class="p-5 border border-gray-100 rounded-xl hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-bold text-gray-800">{{ account.platform }}</span>
+                        <i data-lucide="wallet" class="w-5 h-5 text-gray-400"></i>
+                    </div>
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <span class="text-xs text-gray-400 block">Balance</span>
+                            <span class="text-lg font-bold text-green-600"> {{ formatCurrency(account.availableAssets) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- ===== Vue.js Application Script ===== -->
+    <script src="homePage.js"></script>
+</body>
+</html>

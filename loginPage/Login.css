@@ -1,0 +1,104 @@
+@font-face {
+    font-family: 'Satoshi' ;
+    src: url(satoshi/Satoshi-Medium.otf);
+}
+
+/* Define custom colors and font for consistency with the design image */
+:root {
+    /* The dark background color found in the image */
+    --dark-bg: #111111;
+    /* The vibrant green accent color */
+    --primary-green: #4CAF50;
+    /* Input and card background, slightly lighter than the body */
+    --input-bg: #222222;
+}
+
+body {
+    font-family: 'Satoshi', sans-serif;
+    background-color: var(--dark-bg);
+    background-image: radial-gradient(rgb(48, 47, 47) 2px, transparent 2px);
+    background-size: 30px 30px;
+    animation: move 8s linear infinite;
+    color: #E0E0E0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+/* Styling the custom input fields to match the dark theme */
+.custom-input {
+    background-color: var(--input-bg);
+    border: 1px solid #444;
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%; /* Ensure inputs take full width */
+}
+
+
+.custom-input:focus {
+    border-color: var(--primary-green);
+}
+
+/* Specific style for the dark gray/green gradient on the left panel. */
+.left-panel-gradient {
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(30, 30, 30, 0.95) 50%, rgba(26, 26, 26, 0.8) 100%);
+}
+
+/* Glow effect for the login container */
+.login-glow {
+    box-shadow: 0 0 100px rgba(36, 90, 64, 0.8), 0 0 8px rgba(76, 175, 80, 0.4);
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(26, 26, 26, 0.9) 100%);
+}
+
+/* Password input field wrapper to position the toggle icon */
+.password-input-group {
+    position: relative;
+}
+.password-toggle-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    transition: color 0.2s;
+    /* Use a z-index to ensure the icon is tappable over the input field */
+    z-index: 10;
+}
+.password-toggle-icon:hover {
+    color: #aaa;
+}
+
+/* Custom Modal Styling for the non-alert message box */
+#message-box {
+    position: fixed;
+    top: 2rem;
+    right: 1rem;
+    background-color: var(--primary-green);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    max-width: 90%;
+}
+
+.show-message {
+    opacity: 1 !important;
+}
+
+@keyframes move {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 30px 30px;
+    }
+}
