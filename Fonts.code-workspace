@@ -1,0 +1,34 @@
+{
+	"folders": [
+		{
+			"path": "Fonts"
+		},
+		{
+			"path": "homePage"
+		},
+		{
+			"path": "Images"
+		},
+		{
+			"path": "landingPage"
+		},
+		{
+			"path": "loginPage"
+		},
+		{
+			"path": "recordPage"
+		},
+		{
+			"path": "settingsPage"
+		},
+		{
+			"path": "SignupPage"
+		},
+		{
+			"path": "transactionPage"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "SignupPage"
+	}
+}

@@ -1,0 +1,347 @@
+@font-face {
+    font-family: 'Satoshi' ;
+    src: url(satoshi/Satoshi-Medium.otf);
+}
+
+/* GENERAL STYLES */
+#app {
+    display: flex;
+    font-family: 'Satoshi', sans-serif;
+    height: 100vh;
+    background-color: #f4f4f4;
+    overflow: hidden;
+    color: #333;
+}
+
+/* LEFT SIDEBAR (NAVIGATION) */
+.sidebar {
+    width: 200px;
+    background-color: #fff;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+    position: relative;
+    flex-shrink: 0;
+}
+
+
+.nav-menu {
+    flex-grow: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: #555;
+    transition: background-color 0.2s;
+    font-size: 0.95em;
+}
+
+.nav-item:hover {
+    background-color: #f0f0f0;
+}
+
+.nav-item.active {
+    background-color: #e6f7e8; /* Light green background */
+    color: #4CAF50; /* Green text for active item */
+    border-right: 3px solid #4CAF50;
+    font-weight: bold;
+}
+
+.nav-item i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+
+.footer-info {
+    padding: 20px;
+    font-size: 0.8em;
+    color: #aaa;
+}
+
+/* MAIN CONTENT (SETTINGS) */
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center; /* Center content on the f4f4f4 background */
+}
+
+.profile-card {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 40px;
+    width: 100%;
+    max-width: 650px; /* Adjusted to fit the image aspect ratio */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.profile-avatar {
+    font-size: 60px;
+    color: #7CB342;
+    margin-right: 15px;
+}
+
+.profile-info-text {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.profile-name {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+}
+
+.profile-email-small {
+    font-size: 0.9em;
+    color: #777;
+}
+
+.edit-button {
+    background-color: #7CB342;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.edit-button:hover {
+    background-color: #689f38;
+}
+
+/* FORM STYLES */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 40px;
+    margin-bottom: 40px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #555;
+    font-size: 0.9em;
+}
+
+.green-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: none;
+    background-color: #e6f7e8;
+    border-radius: 5px;
+    color: #333;
+    font-size: 1em;
+    box-sizing: border-box;
+    appearance: none; /* Removes default dropdown styling */
+}
+
+.green-input:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.date-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.date-group label {
+    grid-column: 1 / -1;
+}
+
+/* EMAIL SECTION */
+.email-section {
+    margin-bottom: 40px;
+}
+
+.section-label {
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #555;
+    display: block;
+    font-size: 0.9em;
+}
+
+.email-item {
+    display: flex;
+    align-items: center;
+    background-color: #f7f7f7;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #eee;
+}
+
+.email-icon {
+    color: #7CB342;
+    margin-right: 10px;
+}
+
+.email-address {
+    flex-grow: 1;
+    color: #333;
+}
+
+.email-time {
+    font-size: 0.8em;
+    color: #999;
+}
+
+.add-email-button {
+    background: none;
+    border: none;
+    color: #8BC34A;
+    cursor: pointer;
+    font-weight: bold;
+    padding-left: 0;
+    transition: color 0.2s;
+}
+
+.add-email-button:hover {
+    color: #689f38;
+}
+
+/* LOGOUT BUTTON */
+.logout-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.logout-button {
+    background-color: #8BC34A;
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+    background-color: #7CB342;
+}
+
+/* RIGHT SIDEBAR (ACCOUNTS) */
+.accounts-sidebar {
+    width: 280px;
+    background-color: #fff;
+    padding: 20px;
+    border-left: 1px solid #eee;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.03);
+    flex-shrink: 0;
+}
+
+.accounts-heading {
+    font-size: 1.2em;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.add-account-button {
+    background-color: #fff;
+    color: #388E3C;
+    border: 1px solid #a5d6a7;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.accounts-heading {
+    border-bottom: none; /* Removed the divider under the heading */
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-bottom: 10px;
+}
+
+/* Re-styling the button placement based on image */
+.accounts-sidebar > .add-account-button {
+    background: none;
+    border: none;
+    color: #4CAF50;
+    font-weight: bold;
+    padding: 0;
+    margin-bottom: 25px;
+    text-align: left;
+    width: auto;
+    display: block;
+}
+
+.account-item {
+    padding: 5px 0;
+}
+
+.account-platform {
+    font-size: 0.8em;
+    color: #777;
+    margin-bottom: 3px;
+}
+
+.account-name {
+    font-size: 1em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.account-label {
+    font-size: 0.8em;
+    color: #555;
+    margin-bottom: 3px;
+}
+
+.account-number {
+    font-family: monospace;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.account-assets {
+    font-size: 1em;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-bottom: 15px;
+}
+
+.account-separator {
+    border: 0;
+    height: 1px;
+    background-color: #d8e8d8;
+    margin: 15px 0;
+}
