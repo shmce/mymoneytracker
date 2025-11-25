@@ -1,0 +1,84 @@
+@font-face {
+    font-family: 'Satoshi' ;
+    src: url(satoshi/Satoshi-Medium.otf);
+}
+
+
+/* Custom font and base styling */
+body {
+    font-family: 'Satoshi', sans-serif;
+}
+
+/* Button Styles */
+.button-container {
+    display: flex;
+    gap: 10px; /* Margin between buttons */
+    margin-top: 10px;
+    justify-content: center; /* Center the buttons horizontally */
+}
+
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center the text horizontally */
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    outline: none;
+    margin: 5px; /* Margin around the button */
+}
+
+.button-gray {
+    background-color: #6b7280; /* Gray color */
+    color: white;
+}
+
+.button-gray:hover {
+    background-color: #4b5563; /* Darker gray on hover */
+}
+
+.button-green {
+    background-color: #10b981; /* Green color */
+    color: white;
+}
+
+.button-green:hover {
+    background-color: #059669; /* Darker green on hover */
+}
+
+.button-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+}
+
+.button-text {
+    font-size: 14px;
+}
+
+/* Hide native dropdown arrow for selects by default; show a custom arrow only when `.show-dropdown` is added */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: none;
+    background-repeat: no-repeat;
+    background-position: right .75rem center;
+    padding-right: .75rem;
+}
+
+/* When `show-dropdown` class is present, display a small chevron SVG on the right */
+select.show-dropdown {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    padding-right: 2rem;
+}
+
+/* Ensure disabled selects don't show pointer cursor */
+select:disabled {
+    cursor: default;
+    opacity: 1;
+}

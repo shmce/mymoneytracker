@@ -1,0 +1,67 @@
+@font-face {
+    font-family: 'Satoshi' ;
+    src: url(satoshi/Satoshi-Medium.otf);
+}
+
+
+/* Custom font and base styling */
+body {
+    font-family: 'Satoshi', sans-serif;
+}
+
+
+/* Custom gradient for the credit card */
+.card-gradient {
+    background: linear-gradient(to bottom right, #343a40, #5c677d);
+}
+
+/* Button Styles */
+.button-container {
+    display: flex;
+    gap: 10px; /* Margin between buttons */
+    margin-top: 10px;
+    justify-content: center; /* Center the buttons horizontally */
+}
+
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center the text horizontally */
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    outline: none;
+    margin: 5px; /* Margin around the button */
+}
+
+.button-gray {
+    background-color: #6b7280; /* Gray color */
+    color: white;
+}
+
+.button-gray:hover {
+    background-color: #4b5563; /* Darker gray on hover */
+}
+
+.button-green {
+    background-color: #10b981; /* Green color */
+    color: white;
+}
+
+.button-green:hover {
+    background-color: #059669; /* Darker green on hover */
+}
+
+.button-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+}
+
+.button-text {
+    font-size: 14px;
+}
