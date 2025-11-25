@@ -1,4 +1,4 @@
-const { createApp, ref, reactive, onMounted } = Vue;
+const { createApp, ref, reactive, onMounted, computed } = Vue;
 
 createApp({
     setup() {
@@ -31,21 +31,62 @@ createApp({
         const showAddAccount = ref(false);
         const newAccount = reactive({ platform: '', accountType: '', inputPlatform: '', availableAssets: 0 });
 
-        // Add Record Modal
-        const showAddModal = ref(false);
-        const newRecord = reactive({
-            account: '',
-            from: '',
-            to: '',
-            amount: '',
-            description: '',
-            date: new Date().toISOString().split('T')[0]
-        });
+        // Remove Account modal
+        const showRemoveAccountModal = ref(false);
+        const selectedAccount = ref('');
+        const accountToRemove = ref('');
+        const removeAccountName = ref('');
+
+        const selectAccount = (platformNumber) => {
+            selectedAccount.value = selectedAccount.value === platformNumber ? '' : platformNumber;
+        };
+
+        const openRemoveAccountModal = (platformNumber, accountName) => {
+            accountToRemove.value = platformNumber;
+            removeAccountName.value = accountName;
+            showRemoveAccountModal.value = true;
+        };
+
+        const closeRemoveAccountModal = () => {
+            showRemoveAccountModal.value = false;
+            accountToRemove.value = '';
+            removeAccountName.value = '';
+        };
+
+        const confirmRemoveAccount = async () => {
+            if (!accountToRemove.value) return;
+            try {
+                const res = await fetch('../removeAccount.php', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ platformNumber: accountToRemove.value })
+                });
+                if (!res.ok) {
+                    alert('Error removing account');
+                    return;
+                }
+                closeRemoveAccountModal();
+                selectedAccount.value = '';
+                await loadAccountsFromServer();
+                await loadTransactions();
+            } catch (err) {
+                console.error('Remove account error:', err);
+                alert('Error removing account');
+            }
+        };
+
+        // Add Record modal removed — transactions are added on the record page
 
         // Transaction lists
         const expenseTransactions = ref([]);
         const incomeTransactions = ref([]);
         const transferTransactions = ref([]);
+
+        // Filter state
+        const filterAccount = ref('');
+        const filterMonth = ref('');
+        const availableMonths = ref([]);
 
         // Helper function
         const toNumber = (val) => {
@@ -93,6 +134,17 @@ createApp({
                     ...t,
                     amount: formatCurrency(toNumber(t.amount))
                 }));
+
+                // Extract available months from transactions
+                const months = new Set();
+                txs.forEach(t => {
+                    if (t.tx_datetime) {
+                        const date = new Date(t.tx_datetime);
+                        const monthStr = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                        months.add(monthStr);
+                    }
+                });
+                availableMonths.value = Array.from(months);
 
                 // Calculate totals
                 totalIncome.value = txs.filter(t => t.tx_type === 'income').reduce((s, t) => s + toNumber(t.amount), 0);
@@ -152,64 +204,45 @@ createApp({
             }
         };
 
-        // Add Record Modal handlers
-        const openAddModal = () => {
-            showAddModal.value = true;
-        };
-
-        const closeAddModal = () => {
-            showAddModal.value = false;
-            newRecord.account = '';
-            newRecord.from = '';
-            newRecord.to = '';
-            newRecord.amount = '';
-            newRecord.description = '';
-            newRecord.date = new Date().toISOString().split('T')[0];
-        };
-
-        const addRecord = async () => {
-            // Validate inputs
-            const payload = {
-                tx_type: activeTab.value,
-                amount: Number(newRecord.amount) || 0,
-                description: newRecord.description,
-                date: newRecord.date
-            };
-
-            if (activeTab.value === 'transfer') {
-                if (!newRecord.from || !newRecord.to) {
-                    alert('Please select both From and To accounts');
-                    return;
+        // Filtered transaction lists based on account and month
+        const filteredExpenseTransactions = computed(() => {
+            return expenseTransactions.value.filter(t => {
+                if (filterAccount.value && t.account !== filterAccount.value) return false;
+                if (filterMonth.value && t.tx_datetime) {
+                    const date = new Date(t.tx_datetime);
+                    const monthStr = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    if (monthStr !== filterMonth.value) return false;
                 }
-                payload.fromAccount = newRecord.from;
-                payload.toAccount = newRecord.to;
-            } else {
-                if (!newRecord.account) {
-                    alert('Please select an account');
-                    return;
+                return true;
+            });
+        });
+
+        const filteredIncomeTransactions = computed(() => {
+            return incomeTransactions.value.filter(t => {
+                if (filterAccount.value && t.account !== filterAccount.value) return false;
+                if (filterMonth.value && t.tx_datetime) {
+                    const date = new Date(t.tx_datetime);
+                    const monthStr = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    if (monthStr !== filterMonth.value) return false;
                 }
-                payload.account = newRecord.account;
-            }
+                return true;
+            });
+        });
 
-            try {
-                const res = await fetch('../addTransaction.php', {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!res.ok) {
-                    alert('Failed to save transaction');
-                    return;
+        const filteredTransferTransactions = computed(() => {
+            return transferTransactions.value.filter(t => {
+                if (filterMonth.value && t.tx_datetime) {
+                    const date = new Date(t.tx_datetime);
+                    const monthStr = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    if (monthStr !== filterMonth.value) return false;
                 }
+                return true;
+            });
+        });
 
-                await loadTransactions();
-                closeAddModal();
-            } catch (e) {
-                console.error(e);
-                alert('Error saving transaction');
-            }
+        // Navigation to record page
+        const goToRecordPage = () => {
+            window.location.href = '../recordPage/recordPage.html';
         };
 
         onMounted(async () => {
@@ -229,22 +262,31 @@ createApp({
             accounts,
             showAddAccount,
             newAccount,
-            showAddModal,
-            newRecord,
+            showRemoveAccountModal,
+            selectedAccount,
+            removeAccountName,
             expenseTransactions,
             incomeTransactions,
             transferTransactions,
-            toNumber,  // Add this line
+            filteredExpenseTransactions,
+            filteredIncomeTransactions,
+            filteredTransferTransactions,
+            filterAccount,
+            filterMonth,
+            availableMonths,
+            toNumber,
             setActiveNav,
             formatCurrency,
             openAddAccount,
             closeAddAccount,
             saveNewAccount,
-            openAddModal,
-            closeAddModal,
-            addRecord,
+            selectAccount,
+            openRemoveAccountModal,
+            closeRemoveAccountModal,
+            confirmRemoveAccount,
             loadAccountsFromServer,
-            loadTransactions
+            loadTransactions,
+            goToRecordPage
         };
     }
 }).mount('#app');

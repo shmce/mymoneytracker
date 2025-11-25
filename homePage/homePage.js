@@ -1,5 +1,5 @@
 // Destructure Vue functions
-const { createApp, ref, onMounted, reactive } = Vue;
+const { createApp, ref, onMounted, reactive, computed } = Vue;
 
 createApp({
     setup() {
@@ -13,7 +13,6 @@ createApp({
         ]);
 
         // Data Properties
-        const activeTab = ref('Expense');
         const currentInput = ref('0');
         const selectedAccount = ref(null);
         const transferToAccount = ref(null);
@@ -25,8 +24,20 @@ createApp({
         const totalMoney = ref(0);
         const monthlyIncome = ref(0);
         const monthlyExpenses = ref(0);
-        // Transactions list (was missing and used in template)
-        const transactions = ref([]);
+
+        // Transaction tabs and lists
+        const activeTab = ref('expense');
+        const tabs = ref([
+            { key: 'expense', label: 'Expense' },
+            { key: 'income', label: 'Income' },
+            { key: 'transfer', label: 'Transfer' },
+        ]);
+        const expenseTransactions = ref([]);
+        const incomeTransactions = ref([]);
+        const transferTransactions = ref([]);
+        const filterAccount = ref('');
+        const filterMonth = ref('');
+        const availableMonths = ref([]);
 
         const toNumber = (val) => {
             if (typeof val === 'number') return val;
@@ -58,11 +69,50 @@ createApp({
             }
         };
 
-        // legacy storage listener (optional)
+        // Load and format transactions from server
+        const loadTransactions = async () => {
+            try {
+                const res = await fetch('../getTransactions.php', { credentials: 'include' });
+                if (!res.ok) throw new Error('Failed to fetch transactions');
+                const txs = await res.json();
+
+                // Separate transactions by type and format amounts
+                expenseTransactions.value = txs.filter(t => t.tx_type === 'expense').map(t => ({
+                    ...t,
+                    amount: formatCurrency(Math.abs(toNumber(t.amount)))
+                }));
+
+                incomeTransactions.value = txs.filter(t => t.tx_type === 'income').map(t => ({
+                    ...t,
+                    amount: formatCurrency(toNumber(t.amount))
+                }));
+
+                transferTransactions.value = txs.filter(t => t.tx_type === 'transfer').map(t => ({
+                    ...t,
+                    amount: formatCurrency(toNumber(t.amount))
+                }));
+
+                // Extract available months from transactions
+                const months = new Set();
+                txs.forEach(t => {
+                    if (t.tx_datetime) {
+                        const date = new Date(t.tx_datetime);
+                        const monthStr = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                        months.add(monthStr);
+                    }
+                });
+                availableMonths.value = Array.from(months);
+            } catch (e) {
+                console.warn('Could not load transactions', e);
+            }
+        };
+
+        // storage listener: reload transactions when changed in other pages
         window.addEventListener('storage', (e)=>{
             if (e.key === 'myMoneyAccounts' || e.key === 'myMoneyTransactions') {
                 loadAccountsFromServer();
                 computeTotals();
+                loadTransactions();
             }
         });
 
@@ -71,6 +121,52 @@ createApp({
         const newAccount = reactive({ platform: '', accountType: '', inputPlatform: '', availableAssets: 0 });
         const openAddAccount = ()=>{ newAccount.platform=''; newAccount.accountType=''; newAccount.inputPlatform=''; newAccount.availableAssets=0; showAddAccount.value=true; };
         const closeAddAccount = ()=>{ showAddAccount.value=false; };
+
+        // Remove Account modal
+        const showRemoveAccountModal = ref(false);
+        const selectedForRemove = ref('');
+        const accountToRemove = ref('');
+        const removeAccountName = ref('');
+
+        const selectAccountForRemove = (platformNumber) => {
+            selectedForRemove.value = selectedForRemove.value === platformNumber ? '' : platformNumber;
+        };
+
+        const openRemoveAccountModal = (platformNumber, accountName) => {
+            accountToRemove.value = platformNumber;
+            removeAccountName.value = accountName;
+            showRemoveAccountModal.value = true;
+        };
+
+        const closeRemoveAccountModal = () => {
+            showRemoveAccountModal.value = false;
+            accountToRemove.value = '';
+            removeAccountName.value = '';
+        };
+
+        const confirmRemoveAccount = async () => {
+            if (!accountToRemove.value) return;
+            try {
+                const res = await fetch('../removeAccount.php', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ platformNumber: accountToRemove.value })
+                });
+                if (!res.ok) {
+                    alert('Error removing account');
+                    return;
+                }
+                closeRemoveAccountModal();
+                selectedForRemove.value = '';
+                await loadAccountsFromServer();
+                await computeTotals();
+                await loadTransactions();
+            } catch (err) {
+                console.error('Remove account error:', err);
+                alert('Error removing account');
+            }
+        };
         const saveNewAccount = async ()=>{
             if (!newAccount.platform) { alert('Please enter an account name.'); return; }
             const payload = { platform: newAccount.platform, platformNumber: newAccount.platformNumber || '', availableAssets: Number(newAccount.availableAssets) || 0 };
@@ -120,6 +216,42 @@ createApp({
         };
         const setSpendingFilter = (filter) => { spendingReport.activeFilter = filter; renderChart(); };
 
+        // Filtered transaction lists based on active filters
+        const filteredExpenseTransactions = computed(() => {
+            return expenseTransactions.value.filter(t => {
+                if (filterAccount.value && t.account !== filterAccount.value) return false;
+                if (filterMonth.value && t.tx_datetime) {
+                    const date = new Date(t.tx_datetime);
+                    const monthStr = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    if (monthStr !== filterMonth.value) return false;
+                }
+                return true;
+            });
+        });
+
+        const filteredIncomeTransactions = computed(() => {
+            return incomeTransactions.value.filter(t => {
+                if (filterAccount.value && t.account !== filterAccount.value) return false;
+                if (filterMonth.value && t.tx_datetime) {
+                    const date = new Date(t.tx_datetime);
+                    const monthStr = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    if (monthStr !== filterMonth.value) return false;
+                }
+                return true;
+            });
+        });
+
+        const filteredTransferTransactions = computed(() => {
+            return transferTransactions.value.filter(t => {
+                if (filterMonth.value && t.tx_datetime) {
+                    const date = new Date(t.tx_datetime);
+                    const monthStr = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    if (monthStr !== filterMonth.value) return false;
+                }
+                return true;
+            });
+        });
+
         // UI helpers
         const formatCurrency = (v)=>{ return `₱ ${new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v)}`; };
         const formatAmount = (v)=>{ const num=Math.abs(v); const formatted = `₱ ${num.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`; if (v<0) return `-${formatted}`; if (v>0) return `+${formatted}`; return formatted; };
@@ -131,23 +263,40 @@ createApp({
             renderChart();
             if (window.lucide) lucide.createIcons();
             await computeTotals();
+            await loadTransactions();
         });
 
         return { activeNav, 
                  navItems, 
-                 showAddAccount, 
-                 newAccount, 
-                 openAddAccount, 
-                 closeAddAccount, 
-                 saveNewAccount, 
+                 showAddAccount,
+                 newAccount,
+                 openAddAccount,
+                 closeAddAccount,
+                 saveNewAccount,
+                 showRemoveAccountModal,
+                 selectedForRemove,
+                 removeAccountName,
+                 selectAccountForRemove,
+                 openRemoveAccountModal,
+                 closeRemoveAccountModal,
+                 confirmRemoveAccount,
                  totalMoney, 
                  monthlyIncome, 
                  monthlyExpenses, 
                  spendingFilters, 
                  spendingReport, 
-                 transactions, 
                  accounts, 
-                 activeTab, 
+                 activeTab,
+                 tabs,
+                 expenseTransactions,
+                 incomeTransactions,
+                 transferTransactions,
+                 filteredExpenseTransactions,
+                 filteredIncomeTransactions,
+                 filteredTransferTransactions,
+                 filterAccount,
+                 filterMonth,
+                 availableMonths,
                  currentInput, 
                  setActiveNav, 
                  setSpendingFilter, 
@@ -155,6 +304,7 @@ createApp({
                  formatAmount, 
                  goToRecordPage, 
                  loadAccountsFromServer, 
-                 computeTotals };
+                 computeTotals,
+                 loadTransactions };
     }
 }).mount('#app');

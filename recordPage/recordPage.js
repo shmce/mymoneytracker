@@ -50,6 +50,51 @@ createApp({
             showAddAccount.value = false;
         }
 
+        // Remove Account modal
+        const showRemoveAccountModal = ref(false);
+        const selectedForRemove = ref('');
+        const accountToRemove = ref('');
+        const removeAccountName = ref('');
+
+        const selectAccountForRemove = (platformNumber) => {
+            selectedForRemove.value = selectedForRemove.value === platformNumber ? '' : platformNumber;
+        };
+
+        const openRemoveAccountModal = (platformNumber, accountName) => {
+            accountToRemove.value = platformNumber;
+            removeAccountName.value = accountName;
+            showRemoveAccountModal.value = true;
+        };
+
+        const closeRemoveAccountModal = () => {
+            showRemoveAccountModal.value = false;
+            accountToRemove.value = '';
+            removeAccountName.value = '';
+        };
+
+        const confirmRemoveAccount = async () => {
+            if (!accountToRemove.value) return;
+            try {
+                const res = await fetch('../removeAccount.php', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ platformNumber: accountToRemove.value })
+                });
+                if (!res.ok) {
+                    alert('Error removing account');
+                    return;
+                }
+                closeRemoveAccountModal();
+                selectedForRemove.value = '';
+                const r2 = await fetch('../getAccounts.php', { credentials: 'include' });
+                if (r2.ok) accounts.value = await r2.json();
+            } catch (err) {
+                console.error('Remove account error:', err);
+                alert('Error removing account');
+            }
+        };
+
         async function saveNewAccount() {
             if (!newAccount.value.platform) {
                 alert('Please enter an account name.');
@@ -272,6 +317,13 @@ createApp({
             openAddAccount,
             closeAddAccount,
             saveNewAccount,
+            showRemoveAccountModal,
+            selectedForRemove,
+            removeAccountName,
+            selectAccountForRemove,
+            openRemoveAccountModal,
+            closeRemoveAccountModal,
+            confirmRemoveAccount,
             keypadKeys,
             pressKey,
             executeExpense,

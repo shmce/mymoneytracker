@@ -59,3 +59,26 @@ body {
 .button-text {
     font-size: 14px;
 }
+
+/* Hide native dropdown arrow for selects by default; show a custom arrow only when `.show-dropdown` is added */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: none;
+    background-repeat: no-repeat;
+    background-position: right .75rem center;
+    padding-right: .75rem;
+}
+
+/* When `show-dropdown` class is present, display a small chevron SVG on the right */
+select.show-dropdown {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    padding-right: 2rem;
+}
+
+/* Ensure disabled selects don't show pointer cursor */
+select:disabled {
+    cursor: default;
+    opacity: 1;
+}

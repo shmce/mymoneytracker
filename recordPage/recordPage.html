@@ -150,7 +150,10 @@
             
 
             <div class="space-y-10">
-                <div v-for="account in accounts" :key="account.platformNumber" class="p-5 border border-gray-100 rounded-xl hover:shadow-md transition-shadow">
+                <div v-for="account in accounts" :key="account.platformNumber" 
+                     @click="selectAccountForRemove(account.platformNumber)"
+                     :class="['p-5 border rounded-xl hover:shadow-md transition-shadow cursor-pointer', 
+                              selectedForRemove === account.platformNumber ? 'border-red-300 bg-red-50' : 'border-gray-100']">
                     <div class="flex justify-between items-start mb-2">
                         <span class="font-bold text-gray-800">{{ account.platform }}</span>
                         <i data-lucide="wallet" class="w-5 h-5 text-gray-400"></i>
@@ -161,6 +164,9 @@
                             <span class="text-lg font-bold text-green-600">₱ {{ formatCurrency(account.availableAssets) }}</span>
                         </div>
                     </div>
+                    <button v-if="selectedForRemove === account.platformNumber" 
+                            @click.stop="openRemoveAccountModal(account.platformNumber, account.platform)" 
+                            class="mt-3 text-sm text-white bg-red-600 px-3 py-1 rounded hover:bg-red-700 transition w-full">Remove</button>
                 </div>
             </div>
 </aside>
@@ -196,6 +202,18 @@
                 <div class="flex justify-end gap-2 mt-6">
                     <button @click="closeAddAccount" class="px-4 py-2 rounded bg-gray-100">Cancel</button>
                     <button @click="saveNewAccount" class="px-4 py-2 rounded bg-green-600 text-white">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Remove Account Confirmation Modal -->
+        <div v-if="showRemoveAccountModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div class="bg-white rounded-lg w-full max-w-sm p-6 shadow-lg">
+                <h3 class="text-lg font-semibold mb-2">Confirm Account Removal</h3>
+                <p class="text-sm text-gray-700 mb-4">Are you sure you want to remove <strong>{{ removeAccountName }}</strong>? This action cannot be undone.</p>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button @click="closeRemoveAccountModal" class="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200 transition">Cancel</button>
+                    <button @click="confirmRemoveAccount" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition">Remove</button>
                 </div>
             </div>
         </div>
