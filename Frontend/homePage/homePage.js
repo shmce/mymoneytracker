@@ -1,5 +1,5 @@
 // Destructure Vue functions
-const { createApp, ref, onMounted, reactive, computed } = Vue;
+const { createApp, ref, onMounted, onUnmounted, reactive, computed } = Vue;
 
 createApp({
     setup() {
@@ -24,6 +24,7 @@ createApp({
         const totalMoney = ref(0);
         const monthlyIncome = ref(0);
         const monthlyExpenses = ref(0);
+        const userName = ref('');
 
         // Transaction tabs and lists
         const activeTab = ref('expense');
@@ -53,6 +54,25 @@ createApp({
                 accounts.value = await res.json();
             } catch (e) {
                 console.warn('Could not load accounts from server', e);
+            }
+        };
+
+        const loadProfileFromServer = async () => {
+            try {
+                const res = await fetch('../../Backend/getProfile.php', { credentials: 'include' });
+                if (!res.ok) throw new Error('Failed to load profile');
+                const data = await res.json();
+                // Prefer explicit first_name from API; fall back to combined `name` and extract first word
+                const first = (data.first_name || '').trim();
+                if (first) {
+                    userName.value = first;
+                } else {
+                    const fullName = (data.name || '').trim();
+                    const firstName = fullName.split(/\s+/).filter(Boolean)[0] || fullName;
+                    userName.value = firstName;
+                }
+            } catch (e) {
+                console.warn('Could not load profile from server', e);
             }
         };
 
@@ -108,11 +128,13 @@ createApp({
         };
 
         // storage listener: reload transactions when changed in other pages
-        window.addEventListener('storage', (e)=>{
+        window.addEventListener('storage', async (e)=>{
             if (e.key === 'myMoneyAccounts' || e.key === 'myMoneyTransactions') {
-                loadAccountsFromServer();
-                computeTotals();
-                loadTransactions();
+                await loadAccountsFromServer();
+                await computeTotals();
+                await loadTransactions();
+                updateChartData();
+                renderChart();
             }
         });
 
@@ -197,10 +219,128 @@ createApp({
             }
         };
 
-        // Spending Report placeholders
-        const spendingFilters = ref(['12 Months','3 Months','30 Days','7 Days','24 Hours']);
-        const spendingReport = reactive({ activeFilter: '12 Months' });
-        const chartData = ref({ labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Des'], datasets: [] });
+        // Spending Report
+        const spendingFilters = ref(['This Year', 'Last 6 Months', 'Last 3 Months', 'This Month', 'Last 7 Days', 'Last 3 Hours']);
+        const spendingReport = reactive({ activeFilter: 'This Year' });
+        const chartData = ref({ labels: [], datasets: [] });
+        let spendingChart = null; // To store the chart instance
+        let chartUpdateInterval = null; // To store the interval ID for auto-updating the chart
+
+        // Function to update chart data based on filter
+        const updateChartData = () => {
+            const now = new Date();
+            let labels = [];
+            let netData = [];
+            const filter = spendingReport.activeFilter;
+
+            // Determine the time range and grouping
+            let startDate, groupBy;
+            if (filter === 'This Year') {
+                startDate = new Date(now.getFullYear(), 0, 1); // January 1st of current year
+                groupBy = 'month';
+            } else if (filter === 'Last 6 Months') {
+                startDate = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+                groupBy = 'month';
+            } else if (filter === 'Last 3 Months') {
+                startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+                groupBy = 'month';
+            } else if (filter === 'This Month') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                groupBy = 'day';
+            } else if (filter === 'Last 7 Days') {
+                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                groupBy = 'day';
+            } else if (filter === 'Last 3 Hours') {
+                startDate = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+                groupBy = 'hour';
+            }
+
+            // Generate labels based on groupBy
+            if (groupBy === 'month') {
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                let current = new Date(startDate);
+                while (current <= now) {
+                    labels.push(months[current.getMonth()]);
+                    current.setMonth(current.getMonth() + 1);
+                }
+            } else if (groupBy === 'day') {
+                let current = new Date(startDate);
+                while (current <= now) {
+                    labels.push(current.getDate().toString());
+                    current.setDate(current.getDate() + 1);
+                }
+            } else if (groupBy === 'hour') {
+                let current = new Date(startDate);
+                while (current <= now) {
+                    labels.push(current.getHours().toString() + ':00');
+                    current.setHours(current.getHours() + 1);
+                }
+            }
+
+            // Aggregate data from transactions
+            const expenseMap = new Map();
+            const incomeMap = new Map();
+
+            // Combine all transactions
+            const allTransactions = [...expenseTransactions.value, ...incomeTransactions.value];
+
+            allTransactions.forEach(tx => {
+                if (!tx.tx_datetime) return;
+                const date = new Date(tx.tx_datetime);
+                if (date < startDate) return;
+
+                let key;
+                if (groupBy === 'month') {
+                    key = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][date.getMonth()];
+                } else if (groupBy === 'day') {
+                    key = date.getDate().toString();
+                } else if (groupBy === 'hour') {
+                    key = date.getHours().toString() + ':00';
+                }
+
+                const amount = toNumber(tx.amount);
+                if (tx.tx_type === 'expense') {
+                    expenseMap.set(key, (expenseMap.get(key) || 0) + Math.abs(amount));
+                } else if (tx.tx_type === 'income') {
+                    incomeMap.set(key, (incomeMap.get(key) || 0) + amount);
+                }
+            });
+
+            // Fill net data array cumulatively (running total of Income - Expenses)
+            let cumulative = 0;
+            labels.forEach(label => {
+                const income = incomeMap.get(label) || 0;
+                const expense = expenseMap.get(label) || 0;
+                cumulative += income - expense;
+                netData.push(cumulative);
+            });
+
+            // Create border colors array for segments (leading to each point)
+            const borderColors = netData.slice(1).map(value => value >= 0 ? '#22c55e' : '#ef4444');
+
+            chartData.value = {
+                labels,
+                datasets: [
+                    {
+                        label: 'Net Trend (Income - Expenses)',
+                        data: netData,
+                        borderColor: borderColors,
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: (context) => {
+                            const value = context.parsed.y;
+                            return value >= 0 ? '#22c55e' : '#ef4444'; // Green for bullish, red for bearish
+                        },
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }
+                ]
+            };
+        };
 
         // Navigation and filter helpers (were referenced from template but not defined)
         const setActiveNav = (name) => {
@@ -214,7 +354,7 @@ createApp({
             }
             // For 'Dashboard', stay on the same page
         };
-        const setSpendingFilter = (filter) => { spendingReport.activeFilter = filter; renderChart(); };
+        const setSpendingFilter = (filter) => { spendingReport.activeFilter = filter; updateChartData(); renderChart(); };
 
         // Filtered transaction lists based on active filters
         const filteredExpenseTransactions = computed(() => {
@@ -255,19 +395,82 @@ createApp({
         // UI helpers
         const formatCurrency = (v)=>{ return `₱ ${new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v)}`; };
         const formatAmount = (v)=>{ const num=Math.abs(v); const formatted = `₱ ${num.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`; if (v<0) return `-${formatted}`; if (v>0) return `+${formatted}`; return formatted; };
-        const renderChart = ()=>{ try{ const ctx=document.getElementById('spendingChart'); if (!ctx) return; const c=ctx.getContext('2d'); new Chart(c,{type:'line',data:chartData.value, options:{responsive:true}}); }catch(e){/*ignore*/} };
+        
+        // Updated Render Chart Function
+        const renderChart = () => {
+            const ctx = document.getElementById('spendingChart');
+            if (!ctx) return;
+
+            // Destroy the old chart instance if it exists to prevent glitches
+            if (spendingChart) {
+                spendingChart.destroy();
+            }
+
+            // Create the new chart
+            spendingChart = new Chart(ctx, {
+                type: 'line',
+                data: chartData.value,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Allows chart to stretch width/height
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 8
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                borderDash: [2, 2],
+                                drawBorder: false,
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false,
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
         const goToRecordPage = ()=>{ window.location.href='../recordPage/recordPage.html'; };
 
         onMounted(async ()=>{
             await loadAccountsFromServer();
-            renderChart();
-            if (window.lucide) lucide.createIcons();
+            await loadProfileFromServer();
             await computeTotals();
             await loadTransactions();
+            updateChartData(); // Update chart data after transactions are loaded
+            renderChart(); // Render chart after data is ready
+            if (window.lucide) lucide.createIcons();
         });
 
-        return { activeNav, 
-                 navItems, 
+        onUnmounted(() => {
+            if (chartUpdateInterval) {
+                clearInterval(chartUpdateInterval);
+            }
+        });
+
+        return { activeNav,
+                 navItems,
                  showAddAccount,
                  newAccount,
                  openAddAccount,
@@ -280,12 +483,13 @@ createApp({
                  openRemoveAccountModal,
                  closeRemoveAccountModal,
                  confirmRemoveAccount,
-                 totalMoney, 
-                 monthlyIncome, 
-                 monthlyExpenses, 
-                 spendingFilters, 
-                 spendingReport, 
-                 accounts, 
+                 totalMoney,
+                 monthlyIncome,
+                 monthlyExpenses,
+                 userName,
+                 spendingFilters,
+                 spendingReport,
+                 accounts,
                  activeTab,
                  tabs,
                  expenseTransactions,
@@ -297,13 +501,13 @@ createApp({
                  filterAccount,
                  filterMonth,
                  availableMonths,
-                 currentInput, 
-                 setActiveNav, 
-                 setSpendingFilter, 
-                 formatCurrency, 
-                 formatAmount, 
-                 goToRecordPage, 
-                 loadAccountsFromServer, 
+                 currentInput,
+                 setActiveNav,
+                 setSpendingFilter,
+                 formatCurrency,
+                 formatAmount,
+                 goToRecordPage,
+                 loadAccountsFromServer,
                  computeTotals,
                  loadTransactions };
     }

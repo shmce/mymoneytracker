@@ -7,7 +7,8 @@ export default {
         email: '',
         password: '',
         confirmPassword: '',
-        name: '',
+        firstName: '',
+        lastName: '',
         dobMonth: '',
         dobDay: '',
         dobYear: '',
@@ -38,7 +39,8 @@ export default {
       // --- Form Submission Logic ---
       // In a real app, you'd send this data to a backend API
       console.log('Registering user with data:', this.formData);
-      alert(`Registration successful for ${this.formData.name}! (Check the console for data)`);
+      const displayName = `${this.formData.firstName} ${this.formData.lastName}`.trim();
+      alert(`Registration successful for ${displayName}! (Check the console for data)`);
 
       // You could reset the form here if needed
       // Object.keys(this.formData).forEach(key => this.formData[key] = '');

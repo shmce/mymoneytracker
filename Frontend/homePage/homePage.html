@@ -12,6 +12,7 @@
 
     <!-- 3. Load Chart.js for the graph -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
     <!-- 4. Load Lucide Icons -->
     <script src="https://unpkg.com/lucide-icons"></script>
@@ -64,6 +65,11 @@
         <main class="flex-1 p-8 overflow-y-auto">
 
 
+            <!-- Greeting -->
+            <div class="mb-6">
+                <h1 class="text-2xl font-semibold text-gray-800">Hello, <span class="text-green-600 font-semibold">{{ userName }}</span>!</h1>
+            </div>
+
             <!-- Top Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <!-- Total Money -->
@@ -114,27 +120,17 @@
             </div>
 
             <!-- Spending Report -->
-            <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
-        <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold text-gray-800">Spending Report</h2>
-                    <div class="flex items-center space-x-1 mt-3 sm:mt-0">
-                        <button v-for="filter in spendingFilters" :key="filter"
-                                @click="setSpendingFilter(filter)"
-                                :class="[
-                                    'px-3 py-1 text-sm rounded-md',
-                                    spendingReport.activeFilter === filter
-                                        ? 'bg-gray-200 text-gray-900 font-medium'
-                                        : 'text-gray-500 hover:bg-gray-100'
-                                ]">
-                            {{ filter }}
-                        </button>
-                    </div>
-                </div>
-                <!-- Chart Canvas -->
-                <div class="h-64">
-                    <canvas id="spendingChart"></canvas>
-                </div>
-            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm mb-8"> <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">Spending Report</h2>
+        <select v-model="spendingReport.activeFilter" @change="setSpendingFilter(spendingReport.activeFilter)" class="px-3 py-1 text-sm rounded-md border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+            <option v-for="filter in spendingFilters" :key="filter" :value="filter">
+                {{ filter }}
+            </option>
+        </select>
+    </div>
+    <div class="relative h-80 w-full"> <canvas id="spendingChart"></canvas>
+    </div>
+</div>
 
             <!-- Transaction History -->
             <div class="bg-white p-6 rounded-lg shadow-sm">

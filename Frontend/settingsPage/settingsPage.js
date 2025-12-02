@@ -214,7 +214,8 @@ createApp({
                 const data = await res.json();
                 if (!data || data.error) return;
 
-                form.fullName = data.name || '';
+                form.firstName = data.first_name || '';
+                form.lastName = data.last_name || '';
                 form.email = data.email || '';
                 // nickname not stored in DB — leave as-is
                 form.gender = data.gender || '';
