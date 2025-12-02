@@ -12,13 +12,13 @@ Contents: frontend pages (HTML/CSS/JS) under `Frontend/`, backend PHP under `Bac
 
 ## Quick start (Windows + XAMPP)
 
-1. Place the project folder inside your web root (e.g. `C:\xampp\htdocs\liyod`).
+1. Place the project folder inside your web root (e.g. `C:\xampp\htdocs\`).
 2. Start Apache and MySQL from the XAMPP Control Panel.
 3. Import the database schema:
    - Option A — phpMyAdmin (GUI): open http://localhost/phpmyadmin, go to the `Import` tab, choose `SQL/database.sql`, click `Go`.
    - Option B — CLI (PowerShell):
      ```powershell
-     mysql -u root < "C:\xampp\htdocs\liyod\SQL\database.sql"
+     mysql -u root < "C:\xampp\htdocs\SQL\database.sql"
      ```
    This creates the `mymoney_tracker` database with the needed tables (`users`, `accounts`, `transactions`).
 4. Configure DB connection if needed: edit `Backend/db_connect.php` and set your MySQL credentials. By default the project expects:
@@ -31,8 +31,8 @@ Contents: frontend pages (HTML/CSS/JS) under `Frontend/`, backend PHP under `Bac
 
 ## Run and test
 
-1. Open the signup page in your browser: `http://localhost/liyod/Frontend/SignupPage/signUp.html` and register a user.
-2. Login at `http://localhost/liyod/Frontend/loginPage/Login.html`.
+1. Open the signup page in your browser: `http://localhost/Frontend/SignupPage/signUp.html` and register a user.
+2. Login at `http://localhost/Frontend/loginPage/Login.html`.
 3. Successful login redirects to `Frontend/homePage/homePage.html` and the greeting shows the first name.
 
 ## Notes for developers
