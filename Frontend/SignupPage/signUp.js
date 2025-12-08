@@ -7,7 +7,8 @@ export default {
         email: '',
         password: '',
         confirmPassword: '',
-        name: '',
+        firstName: '',
+        lastName: '',
         dobMonth: '',
         dobDay: '',
         dobYear: '',
@@ -30,15 +31,32 @@ export default {
     // Method called when the form is submitted
     handleRegister() {
       // --- Basic Validation ---
-      if (this.formData.password !== this.formData.confirmPassword) {
+      const pwd = this.formData.password || '';
+      const confirm = this.formData.confirmPassword || '';
+
+      if (pwd !== confirm) {
         alert('Passwords do not match. Please try again.');
         return; // Stop the function
+      }
+
+      // Require at least 8 characters
+      if (pwd.length < 8) {
+        alert('Password must be at least 8 characters long.');
+        return;
+      }
+
+      // Allow only alphanumeric and these special characters: . - _ ? ! $
+      const allowedRegex = /^[A-Za-z0-9.\-_\?\!\$]+$/;
+      if (!allowedRegex.test(pwd)) {
+        alert("Password contains invalid characters. Only letters, numbers and the characters . - _ ? ! $ are allowed.");
+        return;
       }
 
       // --- Form Submission Logic ---
       // In a real app, you'd send this data to a backend API
       console.log('Registering user with data:', this.formData);
-      alert(`Registration successful for ${this.formData.name}! (Check the console for data)`);
+      const displayName = `${this.formData.firstName} ${this.formData.lastName}`.trim();
+      alert(`Registration successful for ${displayName}! (Check the console for data)`);
 
       // You could reset the form here if needed
       // Object.keys(this.formData).forEach(key => this.formData[key] = '');

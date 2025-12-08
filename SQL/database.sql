@@ -8,7 +8,8 @@ USE mymoney_tracker;
 -- 2)  users
 CREATE TABLE users (
   id         INT AUTO_INCREMENT PRIMARY KEY,
-  name       VARCHAR(100) NOT NULL,
+  first_name       VARCHAR(100) NOT NULL,
+  last_name       VARCHAR(100) NOT NULL,
   email      VARCHAR(120) NOT NULL UNIQUE,
   password   VARCHAR(255) NOT NULL,
   gender     VARCHAR(20),
@@ -39,7 +40,7 @@ CREATE TABLE transactions (
   account_to    VARCHAR(120),
   amount        DECIMAL(12,2) NOT NULL,
   description   TEXT,
-  tx_datetime   DATETIME DEFAULT CURRENT_TIMESTAMP,
+  tx_datetime   DATE NOT NULL,
   created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

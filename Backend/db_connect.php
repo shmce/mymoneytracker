@@ -30,8 +30,8 @@ if (isset($_GET['export']) && $_GET['export'] == '1') {
 
     $out = [];
 
-    // users
-    $res = $conn->query("SELECT id,name,email,gender,dob,created_at,updated_at FROM users");
+    // users (return both first/last and combined name for compatibility)
+    $res = $conn->query("SELECT id, first_name, last_name, CONCAT(first_name, ' ', last_name) AS name, email, gender, dob, created_at, updated_at FROM users");
     $out['users'] = $res->fetch_all(MYSQLI_ASSOC);
 
     // accounts

@@ -8,6 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://unpkg.com/lucide-icons"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/confirmDate/confirmDate.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/confirmDate/confirmDate.css">
     
     <link rel="stylesheet" href="recordPage.css">
     <style>
@@ -28,7 +32,7 @@
             <!-- Logo -->
             <div class="flex items-center space-x-3 mb-10">
                 <div class="logo-container w-200 h-200 flex items-center justify-center rounded-full">
-                    <img src="../Images/Logo.svg" alt="MyMoney Tracker Logo" class="w-200 h-200">
+                    <a href="../homePage/homePage.html"><img src="../Images/Logo.svg" alt="MyMoney Tracker Logo" class="w-200 h-200"></a>
                 </div>
                 <span class="text-xl font-bold text-gray-800">My<span class="text-green-600">Money</span> Tracker</span>
             </div>
@@ -105,12 +109,12 @@
 
                         <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                             <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Description</label>
-                                <input v-model="description" type="text" placeholder="Enter description" class="bg-transparent font-semibold text-gray-700 text-right outline-none w-full ml-4"/>
+                            <input v-model="description" type="text" placeholder="Enter description" class="bg-transparent font-semibold text-gray-700 text-right outline-none w-full ml-4"/>
                         </div>
 
                         <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                             <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Date</label>
-                            <span class="font-semibold text-gray-700">{{ currentDateTime }}</span>
+                            <input id="dateInput" v-model="selectedDate" type="text" placeholder="Select date" class="bg-transparent font-semibold text-gray-700 text-right outline-none w-full ml-4" />
                         </div>
                     </div>
 

@@ -14,21 +14,35 @@ $action = $input['action'];
 
 /* ---------- 1. REGISTER ---------- */
 if ($action === 'register') {
-    $name     = trim($input['name']     ?? '');
+    // Accept either first_name/last_name or legacy `name`
+    $first_name = trim($input['first_name'] ?? '');
+    $last_name = trim($input['last_name'] ?? '');
+    $name     = trim($input['name'] ?? '');
     $email    = trim($input['email']    ?? '');
     $password = trim($input['password'] ?? '');
     $gender   = trim($input['gender']   ?? '');
     $dob      = $input['dob'] ?? null;
 
-    if (!$name || !$email || !$password) {
+    if (!$email || !$password || (!$first_name && !$name)) {
         http_response_code(400);
-        echo json_encode(['error' => 'name, email, password required']);
+        echo json_encode(['error' => 'first_name (or name), email, password required']);
         exit;
     }
+
     $hash = password_hash($password, PASSWORD_DEFAULT);
 
-    $stmt = $conn->prepare("INSERT INTO users (name,email,password,gender,dob) VALUES (?,?,?,?,?)");
-    $stmt->bind_param('sssss', $name, $email, $hash, $gender, $dob);
+    // Prefer separate parts when supplied
+    if ($first_name || $last_name) {
+        $stmt = $conn->prepare("INSERT INTO users (first_name,last_name,email,password,gender,dob) VALUES (?,?,?,?,?,?)");
+        $stmt->bind_param('ssssss', $first_name, $last_name, $email, $hash, $gender, $dob);
+    } else {
+        // split legacy name into first/last
+        $parts = preg_split('/\s+/', $name);
+        $fn = array_shift($parts);
+        $ln = implode(' ', $parts);
+        $stmt = $conn->prepare("INSERT INTO users (first_name,last_name,email,password,gender,dob) VALUES (?,?,?,?,?,?)");
+        $stmt->bind_param('ssssss', $fn, $ln, $email, $hash, $gender, $dob);
+    }
     if (!$stmt->execute()) {
         http_response_code(500);
         echo json_encode(['error' => 'User create failed', 'sql' => $stmt->error]);
@@ -40,11 +54,18 @@ if ($action === 'register') {
     /*  NO DEFAULT ACCOUNTS ANY MORE  */
 
     $_SESSION['user_id'] = $userId;
-    $_SESSION['name']    = $name;
+    // store name parts if available in session
+    if (!empty($first_name) || !empty($last_name)) {
+        $_SESSION['first_name'] = $first_name;
+        $_SESSION['last_name'] = $last_name;
+        $_SESSION['name'] = trim($first_name . ' ' . $last_name);
+    } else {
+        $_SESSION['name'] = $name;
+    }
 
     echo json_encode([
         'ok'  => true,
-        'user'=> ['id'=>$userId,'name'=>$name,'email'=>$email]
+        'user'=> ['id'=>$userId,'name'=> ($_SESSION['name'] ?? ''),'email'=>$email]
     ]);
     exit;
 }
@@ -54,7 +75,7 @@ if ($action === 'login') {
     $email = $input['email']    ?? '';
     $pass  = $input['password'] ?? '';
 
-    $stmt = $conn->prepare("SELECT id,name,password FROM users WHERE email=?");
+    $stmt = $conn->prepare("SELECT id, first_name, last_name, password FROM users WHERE email=?");
     $stmt->bind_param('s', $email);
     $stmt->execute();
     $res = $stmt->get_result();
@@ -70,11 +91,15 @@ if ($action === 'login') {
         exit;
     }
     $_SESSION['user_id'] = $user['id'];
-    $_SESSION['name']    = $user['name'];
+    $first = $user['first_name'] ?? '';
+    $last = $user['last_name'] ?? '';
+    $_SESSION['first_name'] = $first;
+    $_SESSION['last_name'] = $last;
+    $_SESSION['name'] = trim($first . ' ' . $last);
 
     echo json_encode([
         'ok'   => true,
-        'user' => ['id'=>$user['id'],'name'=>$user['name'],'email'=>$email]
+        'user' => ['id'=>$user['id'],'name'=> trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')),'email'=>$email]
     ]);
     exit;
 }

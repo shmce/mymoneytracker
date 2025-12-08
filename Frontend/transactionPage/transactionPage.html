@@ -41,7 +41,7 @@
             <!-- Logo -->
             <div class="flex items-center space-x-3 mb-10">
                 <div class="logo-container w-200 h-200 flex items-center justify-center rounded-full">
-                    <img src="../Images/Logo.svg" alt="MyMoney Tracker Logo" class="w-200 h-200">
+                    <a href="../homePage/homePage.html"><img src="../Images/Logo.svg" alt="MyMoney Tracker Logo" class="w-200 h-200"></a>
                 </div>
                 <span class="text-xl font-bold text-gray-800">My<span class="text-green-600">Money</span> Tracker</span>
             </div>
@@ -75,9 +75,6 @@
                         <span class="font-bold text-gray-800 text-[clamp(0.75rem, 6vw, 2.5rem)] leading-tight">
                             {{ formatCurrency(totalIncome) }}
                         </span>
-                        <span class="text-xs font-semibold bg-green-100 text-green-600 px-2 py-1 rounded-full ml-2">
-                            +0%
-                        </span>
                     </div>
                 </div>
                 <!-- This Month's Expense -->
@@ -87,9 +84,6 @@
                         <span class="font-bold text-gray-800 text-[clamp(0.75rem, 6vw, 2.5rem)] leading-tight">
                             {{ formatCurrency(totalExpense) }}
                         </span>
-                        <span class="text-xs font-semibold bg-red-100 text-red-500 px-2 py-1 rounded-full ml-2">
-                            -0%
-                        </span>
                     </div>
                 </div>
                 <!-- Transfers this month -->
@@ -98,9 +92,6 @@
                     <div class="flex items-center justify-between mt-2 w-full">
                         <span class="font-bold text-gray-800 text-[clamp(0.75rem, 6vw, 2.5rem)] leading-tight">
                             {{ formatCurrency(totalTransfer) }}
-                        </span>
-                        <span class="text-xs font-semibold bg-blue-100 text-blue-600 px-2 py-1 rounded-full ml-2">
-                            +0%
                         </span>
                     </div>
                 </div>
@@ -255,11 +246,6 @@
                             <option>e-Wallet</option>
                             <option>Credit</option>
                         </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-gray-600">Input Platform</label>
-                        <input v-model="newAccount.inputPlatform" type="text" class="w-full mt-1 p-2 border rounded" placeholder="Platform identifier or provider" />
                     </div>
 
                     <div>

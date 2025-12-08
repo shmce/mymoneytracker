@@ -6,7 +6,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && isset($_P
     $email = $_POST['email'];
     $pass  = $_POST['password'];
 
-    $sql = "SELECT id, name, password FROM users WHERE email = ?";
+    // Server-side validation: require at least 8 characters and only allowed characters
+    if (strlen($pass) < 8) {
+        header("Location: Login.html?error=pwd_short");
+        exit;
+    }
+
+    // Allowed characters: letters, numbers and . - _ ? ! $
+    if (!preg_match('/^[A-Za-z0-9.\-_%\?\!\$]+$/', $pass)) {
+        // Note: '%' included to be safe for patterns, but we primarily allow . - _ ? ! $
+        header("Location: Login.html?error=pwd_chars");
+        exit;
+    }
+
+    $sql = "SELECT id, first_name, last_name, password FROM users WHERE email = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -17,7 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && isset($_P
         if (password_verify($pass, $user['password'])) {
             // Session already started in db_connect.php
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['name']    = $user['name'];
+            // Set both parts and combined name
+            $first = $user['first_name'] ?? '';
+            $last = $user['last_name'] ?? '';
+            $_SESSION['first_name'] = $first;
+            $_SESSION['last_name'] = $last;
+            $_SESSION['name'] = trim($first . ' ' . $last);
             header("Location: ../homePage/homePage.html");
             exit;
         }

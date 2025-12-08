@@ -24,12 +24,22 @@ createApp({
         const totalExpense = ref(0);
         const totalTransfer = ref(0);
 
+        // Previous month totals for percentage calculations
+        const prevIncome = ref(0);
+        const prevExpense = ref(0);
+        const prevTransfer = ref(0);
+
+        // Percentage changes
+        const incomePercent = ref(0);
+        const expensePercent = ref(0);
+        const transferPercent = ref(0);
+
         // Accounts
         const accounts = ref([]);
 
         // Add Account modal
         const showAddAccount = ref(false);
-        const newAccount = reactive({ platform: '', accountType: '', inputPlatform: '', availableAssets: 0 });
+        const newAccount = reactive({ platform: '', accountType: '', availableAssets: 0 });
 
         // Remove Account modal
         const showRemoveAccountModal = ref(false);
@@ -146,10 +156,40 @@ createApp({
                 });
                 availableMonths.value = Array.from(months);
 
-                // Calculate totals
-                totalIncome.value = txs.filter(t => t.tx_type === 'income').reduce((s, t) => s + toNumber(t.amount), 0);
-                totalExpense.value = txs.filter(t => t.tx_type === 'expense').reduce((s, t) => s + Math.abs(toNumber(t.amount)), 0);
-                totalTransfer.value = txs.filter(t => t.tx_type === 'transfer').reduce((s, t) => s + toNumber(t.amount), 0);
+                // Calculate current month totals
+                const now = new Date();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
+
+                const currentMonthTxs = txs.filter(t => {
+                    if (!t.tx_datetime) return false;
+                    const date = new Date(t.tx_datetime);
+                    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+                });
+
+                totalIncome.value = currentMonthTxs.filter(t => t.tx_type === 'income').reduce((s, t) => s + toNumber(t.amount), 0);
+                totalExpense.value = currentMonthTxs.filter(t => t.tx_type === 'expense').reduce((s, t) => s + Math.abs(toNumber(t.amount)), 0);
+                totalTransfer.value = currentMonthTxs.filter(t => t.tx_type === 'transfer').reduce((s, t) => s + toNumber(t.amount), 0);
+
+                // Calculate previous month totals
+                const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+                const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+                const prevMonthTxs = txs.filter(t => {
+                    if (!t.tx_datetime) return false;
+                    const date = new Date(t.tx_datetime);
+                    return date.getMonth() === prevMonth && date.getFullYear() === prevYear;
+                });
+
+                prevIncome.value = prevMonthTxs.filter(t => t.tx_type === 'income').reduce((s, t) => s + toNumber(t.amount), 0);
+                prevExpense.value = prevMonthTxs.filter(t => t.tx_type === 'expense').reduce((s, t) => s + Math.abs(toNumber(t.amount)), 0);
+                prevTransfer.value = prevMonthTxs.filter(t => t.tx_type === 'transfer').reduce((s, t) => s + toNumber(t.amount), 0);
+
+                // Calculate percentage changes
+                incomePercent.value = prevIncome.value === 0 ? (totalIncome.value > 0 ? 100 : 0) : ((totalIncome.value - prevIncome.value) / Math.abs(prevIncome.value)) * 100;
+                expensePercent.value = prevExpense.value === 0 ? (totalExpense.value > 0 ? 100 : 0) : ((totalExpense.value - prevExpense.value) / Math.abs(prevExpense.value)) * 100;
+                transferPercent.value = prevTransfer.value === 0 ? (totalTransfer.value > 0 ? 100 : 0) : ((totalTransfer.value - prevTransfer.value) / Math.abs(prevTransfer.value)) * 100;
+
             } catch (e) {
                 console.warn('Could not load transactions', e);
             }
@@ -168,7 +208,7 @@ createApp({
         };
 
         // Add Account modal
-        const openAddAccount = ()=>{ newAccount.platform=''; newAccount.accountType=''; newAccount.inputPlatform=''; newAccount.availableAssets=0; showAddAccount.value=true; };
+        const openAddAccount = ()=>{ newAccount.platform=''; newAccount.accountType=''; newAccount.availableAssets=0; showAddAccount.value=true; };
 
         const closeAddAccount = () => {
             showAddAccount.value = false;
@@ -259,6 +299,9 @@ createApp({
             totalIncome,
             totalExpense,
             totalTransfer,
+            incomePercent,
+            expensePercent,
+            transferPercent,
             accounts,
             showAddAccount,
             newAccount,

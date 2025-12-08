@@ -15,6 +15,8 @@ createApp({
         const isEditing = ref(false);
         const form = reactive({
             fullName: '',
+            firstName: '',
+            lastName: '',
             nickname: '',
             gender: '',
             email: '',
@@ -62,8 +64,16 @@ createApp({
             }
         };
 
-        // Save profile to server
+         // Save profile to server
         const saveProfile = async () => {
+            // Prefer explicit form.firstName/form.lastName; fall back to splitting fullName
+            const fullTrim = form.fullName ? form.fullName.trim() : '';
+            const split = fullTrim ? fullTrim.split(/\s+/) : [];
+            const firstName = (form.firstName && form.firstName.trim() !== '') ? form.firstName.trim()
+                              : (split.length ? split[0] : '');
+            const lastName = (form.lastName && form.lastName.trim() !== '') ? form.lastName.trim()
+                             : (split.length > 1 ? split.slice(1).join(' ') : '');
+
             // Build dob in YYYY-MM-DD or empty
             let dob = '';
             if (form.dob.year && form.dob.month && form.dob.day) {
@@ -71,7 +81,8 @@ createApp({
             }
 
             const payload = {
-                name: form.fullName || '',
+                first_name: firstName,
+                last_name: lastName,
                 email: form.email || '',
                 gender: form.gender || '',
                 dob: dob || ''
@@ -85,11 +96,10 @@ createApp({
                     body: JSON.stringify(payload)
                 });
                 let data = null;
-                try { data = await res.json(); } catch (e) { /* ignore parse errors */ }
+                try { data = await res.json(); } catch (e) { }
                 if (!res.ok) {
                     const msg = data && data.error ? data.error : `Server returned ${res.status}`;
                     alert('Could not save profile: ' + msg);
-                    console.warn('Save profile failed', res.status, data);
                     return false;
                 }
                 return true;
@@ -100,21 +110,25 @@ createApp({
             }
         };
 
+
         // Edit toggle: save when going from editing -> not editing
         const toggleEdit = async () => {
             if (isEditing.value) {
                 // currently editing -> attempt save
                 const ok = await saveProfile();
                 if (ok) {
-                    isEditing.value = false;
+                    // Reload profile from server to confirm changes were saved
                     await loadProfileFromServer();
+                    isEditing.value = false;
+                    alert('Profile saved successfully!');
+                } else {
+                    console.error('Failed to save profile');
                 }
             } else {
                 // enable editing
                 isEditing.value = true;
             }
         };
-
         // Add Account modal
         const openAddAccount = ()=>{ newAccount.platform=''; newAccount.accountType=''; newAccount.inputPlatform=''; newAccount.availableAssets=0; showAddAccount.value=true; };
         const closeAddAccount = ()=>{ showAddAccount.value=false; };
@@ -214,26 +228,20 @@ createApp({
                 const data = await res.json();
                 if (!data || data.error) return;
 
-                form.fullName = data.name || '';
+                // Populate explicit first/last fields and fullName
+                form.firstName = data.first_name || '';
+                form.lastName = data.last_name || '';
+                form.fullName = `${form.firstName} ${form.lastName}`.trim();
                 form.email = data.email || '';
-                // nickname not stored in DB — leave as-is
                 form.gender = data.gender || '';
 
                 if (data.dob) {
-                    // dob is stored as YYYY-MM-DD
                     const parts = data.dob.split('-');
                     if (parts.length === 3) {
                         form.dob.year = parts[0];
                         form.dob.month = parts[1];
                         form.dob.day = parts[2];
                     }
-                }
-                // populate email(s) (no displayed date)
-                try {
-                    const emailAddr = data.email || '';
-                    profile.emails = emailAddr ? [{ address: emailAddr }] : [];
-                } catch (e) {
-                    console.warn('Failed to set profile emails', e);
                 }
             } catch (e) {
                 console.warn('Could not load profile from server', e);

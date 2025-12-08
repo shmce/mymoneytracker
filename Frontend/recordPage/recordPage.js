@@ -25,8 +25,9 @@ createApp({
         const currentInput = ref('0');
         const selectedAccount = ref(null);
         const transferToAccount = ref(null);
-        const currentDateTime = ref('');
+        const selectedDate = ref('');
         const description = ref('');
+        const isSaving = ref(false);
 
         // Accounts with reactive balances
         // Start with no accounts for new signups; load from storage if present
@@ -36,7 +37,7 @@ createApp({
         const showAddAccount = ref(false);
         const newAccount = ref({
             platform: '',
-            accountType: '',
+        
             inputPlatform: '',
             availableAssets: 0
         });
@@ -155,10 +156,10 @@ createApp({
             }
         }
 
-        // Set current date/time on mount
+        // Set current date on mount
         onMounted(async () => {
             const now = new Date();
-            currentDateTime.value = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+            selectedDate.value = now.toISOString().split('T')[0]; // YYYY-MM-DD format
             if (window.lucide) lucide.createIcons();
             // Load accounts from server
             try {
@@ -168,7 +169,24 @@ createApp({
                     if (Array.isArray(json)) accounts.value = json;
                 }
             } catch (e) { console.warn('Could not load accounts', e); }
+            // Initialize Flatpickr for date input
+            if (window.flatpickr) {
+                flatpickr("#dateInput", {
+                    dateFormat: "Y-m-d",
+                    defaultDate: selectedDate.value,
+                    maxDate: new Date(),
+                    onChange: function(selectedDates, dateStr, instance) {
+                        selectedDate.value = dateStr;
+                    }
+                });
+            }
         });
+
+        // Set date to today
+        function setToday() {
+            const now = new Date();
+            selectedDate.value = now.toISOString().split('T')[0];
+        }
 
         // Save transaction to localStorage
         async function saveTransaction(type, data) {
@@ -180,13 +198,33 @@ createApp({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ type, record: data })
                 });
-                if (!res.ok) throw new Error('Failed to save transaction');
-                const json = await res.json();
+                let json;
+                if (!res.ok) {
+                    // try to extract server error message
+                    const txt = await res.text().catch(()=>null);
+                    let msg = 'Failed to save transaction';
+                    try { const parsed = JSON.parse(txt); if (parsed && parsed.error) msg = parsed.error; } catch(e) { if (txt) msg = txt; }
+                    // specific UI message for insufficient funds
+                    if (msg && msg.toLowerCase().includes('insufficient')) {
+                        alert('Transaction failed due to insufficient balance.');
+                        return false;
+                    }
+                    alert(msg || 'Failed to save transaction');
+                    return false;
+                }
+                json = await res.json();
                 // if server returns updated accounts, refresh local copy
                 if (json.accounts) accounts.value = json.accounts;
+                return true;
             } catch (e) {
                 console.error('saveTransaction error', e);
-                throw e;
+                const msg = (e && e.message) ? e.message : 'Failed to save transaction';
+                if (msg.toLowerCase().includes('insufficient')) {
+                    alert('Transaction failed due to insufficient balance.');
+                    return false;
+                }
+                alert(msg || 'Failed to save transaction');
+                return false;
             }
         }
 
@@ -204,6 +242,10 @@ createApp({
                 alert('Please select an account.');
                 return;
             }
+            if (!description.value.trim()) {
+                alert('Description is required.');
+                return;
+            }
             if (!currentInput.value || isNaN(parseFloat(currentInput.value)) || parseFloat(currentInput.value) === 0) {
                 alert('Please enter a valid amount.');
                 return;
@@ -211,16 +253,17 @@ createApp({
             const acc = accounts.value.find(a => a.platformNumber === selectedAccount.value);
             const amt = parseFloat(currentInput.value);
             if (!acc || isNaN(amt)) return;
-            
+
             // send to server (server will update balances)
-            await saveTransaction('expense', {
+            const ok = await saveTransaction('expense', {
                 platformNumber: selectedAccount.value,
                 account: acc.platform,
                 description: description.value,
                 amount: amt,
-                date: new Date().toLocaleString()
+                date: selectedDate.value
             });
-            // reset
+            if (!ok) return;
+            // reset on success
             description.value = '';
             currentInput.value = '0';
         }
@@ -231,6 +274,10 @@ createApp({
                 alert('Please select an account.');
                 return;
             }
+            if (!description.value.trim()) {
+                alert('Description is required.');
+                return;
+            }
             if (!currentInput.value || isNaN(parseFloat(currentInput.value)) || parseFloat(currentInput.value) === 0) {
                 alert('Please enter a valid amount.');
                 return;
@@ -238,26 +285,34 @@ createApp({
             const acc = accounts.value.find(a => a.platformNumber === selectedAccount.value);
             const amt = parseFloat(currentInput.value);
             if (!acc || isNaN(amt)) return;
-            
-            await saveTransaction('income', {
+
+            const ok = await saveTransaction('income', {
                 platformNumber: selectedAccount.value,
                 account: acc.platform,
                 description: description.value,
                 amount: amt,
-                date: new Date().toLocaleString()
+                date: selectedDate.value
             });
+            if (!ok) return;
             description.value = '';
             currentInput.value = '0';
         }
 
         // Transfer record
         async function executeTransfer() {
+            try {
+                console.log('executeTransfer triggered', { selectedAccount: selectedAccount.value, transferToAccount: transferToAccount.value, currentInput: currentInput.value });
+                // clear nothing — we no longer use a separate description error field
             if (!selectedAccount.value) {
                 alert('Please select a source account.');
                 return;
             }
             if (!transferToAccount.value) {
                 alert('Please select a receiver account.');
+                return;
+            }
+            if (!description.value.trim()) {
+                alert('Description is required.');
                 return;
             }
             if (!currentInput.value || isNaN(parseFloat(currentInput.value)) || parseFloat(currentInput.value) === 0) {
@@ -268,18 +323,39 @@ createApp({
             const dst = accounts.value.find(a => a.platformNumber === transferToAccount.value);
             const amt = parseFloat(currentInput.value);
             if (!src || !dst || isNaN(amt)) return;
-            
-            await saveTransaction('transfer', {
-                fromPlatformNumber: selectedAccount.value,
-                toPlatformNumber: transferToAccount.value,
-                from: src.platform,
-                to: dst.platform,
-                description: description.value,
-                amount: amt,
-                date: new Date().toLocaleString()
-            });
+
+            // Prevent transfer if insufficient balance
+            if (Number(src.availableAssets) < amt) {
+                alert('Insufficient balance in source account.');
+                return;
+            }
+
+            isSaving.value = true;
+            try {
+                const ok = await saveTransaction('transfer', {
+                    fromPlatformNumber: selectedAccount.value,
+                    toPlatformNumber: transferToAccount.value,
+                    from: src.platform,
+                    to: dst.platform,
+                    description: description.value,
+                    amount: amt,
+                    date: selectedDate.value
+                });
+                if (!ok) { isSaving.value = false; return; }
+            } catch (err) {
+                console.error('Transfer failed:', err);
+                alert('Transfer failed. ' + (err && err.message ? err.message : 'Please try again.'));
+                isSaving.value = false;
+                return;
+            }
+            isSaving.value = false;
             description.value = '';
             currentInput.value = '0';
+            return;
+            } catch (e) {
+                console.error('Unexpected error in executeTransfer:', e);
+                alert('An unexpected error occurred: ' + (e && e.message ? e.message : e));
+            }
         }
 
         // Set tab
@@ -309,7 +385,7 @@ createApp({
             currentInput,
             selectedAccount,
             transferToAccount,
-            currentDateTime,
+            selectedDate,
             description,
             accounts,
             showAddAccount,
@@ -330,8 +406,10 @@ createApp({
             executeIncome,
             executeTransfer,
             setTab,
+            setToday,
             formatCurrency,
             formattedAmount,
+            isSaving,
         };
     }
 }).mount('#app');

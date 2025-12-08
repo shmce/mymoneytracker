@@ -39,9 +39,18 @@ try {
 
 // helper to update account balance
 function adjustAccountBalance($conn, $platformNumber, $delta) {
-    $stmt = $conn->prepare("UPDATE accounts SET availableAssets = availableAssets + ? WHERE platformNumber = ? AND user_id = ?");
-    $stmt->bind_param("dsi", $delta, $platformNumber, $_SESSION['user_id']);
+    // perform an atomic update that prevents availableAssets from dropping below zero
+    $stmt = $conn->prepare("UPDATE accounts 
+        SET availableAssets = availableAssets + ? 
+        WHERE platformNumber = ? AND user_id = ? AND (availableAssets + ?) >= 0");
+    if ($stmt === false) throw new Exception('Failed to prepare balance update');
+    $stmt->bind_param("dsid", $delta, $platformNumber, $_SESSION['user_id'], $delta);
     $stmt->execute();
+    // if no rows were affected, the update condition failed (insufficient funds or missing account)
+    if ($stmt->affected_rows === 0) {
+        $stmt->close();
+        throw new Exception('Transaction failed due to insufficient balance.');
+    }
     $stmt->close();
 }
 
@@ -110,8 +119,10 @@ try {
 } catch (Exception $e) {
     // rollback on any failure
     $conn->rollback();
-    http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    $msg = $e->getMessage();
+    $code = (stripos($msg, 'insufficient') !== false) ? 400 : 500;
+    http_response_code($code);
+    echo json_encode(['error' => $msg]);
     exit;
 }
 

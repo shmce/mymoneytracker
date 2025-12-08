@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$stmt = $conn->prepare("SELECT name, email, gender, dob, created_at FROM users WHERE id = ? LIMIT 1");
+$stmt = $conn->prepare("SELECT first_name, last_name, email, gender, dob, created_at FROM users WHERE id = ? LIMIT 1");
 $stmt->bind_param("i", $_SESSION['user_id']);
 $stmt->execute();
 $res = $stmt->get_result();
@@ -17,6 +17,10 @@ $data = $res->fetch_assoc();
 
 header('Content-Type: application/json');
 if ($data) {
+    // Build compatibility fields: `name` as full name and include first/last separately
+    $data['first_name'] = $data['first_name'] ?? '';
+    $data['last_name'] = $data['last_name'] ?? '';
+    $data['name'] = trim($data['first_name'] . ' ' . $data['last_name']);
     // dob may be NULL; return as-is (YYYY-MM-DD) so client can parse
     echo json_encode($data);
 } else {

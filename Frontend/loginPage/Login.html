@@ -12,8 +12,20 @@
 </head>
 <body>
     <div id="app">
-        <!-- Message Box (Custom alert replacement) -->
-        <div v-if="showMessage" id="message-box" role="alert">{{ message }}</div>
+        <!-- Modal Message Popup -->
+        <div v-if="showMessage" class="fixed inset-0 z-50 flex items-center justify-center" aria-modal="true" role="dialog">
+            <div class="absolute inset-0 bg-black opacity-50"></div>
+            <div class="bg-white rounded-lg shadow-lg z-10 max-w-md w-full p-6 mx-4">
+                <div class="flex justify-between items-start">
+                    <h3 class="text-lg font-semibold text-gray-800">Notice</h3>
+                    <button @click="showMessage = false" aria-label="Close" class="text-gray-500 hover:text-gray-700">✕</button>
+                </div>
+                <div class="mt-4 text-sm text-gray-700">{{ message }}</div>
+                <div class="mt-6 text-right">
+                    <button @click="showMessage = false" class="px-4 py-2 bg-green-600 text-white rounded">Close</button>
+                </div>
+            </div>
+        </div>
 
         <!-- Main Content Container: Centered Card with Rounded Corners -->
         <div class="w-full max-w-8xl mx-auto rounded-xl overflow-hidden login-glow">
@@ -43,7 +55,7 @@
                 </div>
 
                 <!-- FORM SECTION -->
-                <form action="Login.php" method="POST" id="loginForm">
+                <form action="Login.php" method="POST" id="loginForm" @submit.prevent="handleLogin">
                     <div class="space-y-6">
                         <!-- Email Input -->
                         <div class="space-y-2">
