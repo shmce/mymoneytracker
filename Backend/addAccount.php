@@ -56,25 +56,49 @@ if ($platformNumber === '') {
     $platformNumber = 'ACC-' . time() . '-' . rand(1000,9999);
 }
 
-$stmt = $conn->prepare("INSERT INTO accounts (user_id, platformNumber, platform, availableAssets)
-                       VALUES (?, ?, ?, ?)");
-$stmt->bind_param("issd", $_SESSION['user_id'], $platformNumber, $platform, $availableAssets);
-$ok = $stmt->execute();
-$stmt->close();
+try {
+    $stmt = $conn->prepare("INSERT INTO accounts (user_id, platformNumber, platform, availableAssets)
+                           VALUES (?, ?, ?, ?)");
+    
+    if ($stmt === false) {
+        throw new Exception('Failed to prepare insert statement: ' . $conn->error);
+    }
+    
+    $stmt->bind_param("issd", $_SESSION['user_id'], $platformNumber, $platform, $availableAssets);
+    
+    if (!$stmt->execute()) {
+        $stmt->close();
+        throw new Exception('Failed to create account: ' . $stmt->error);
+    }
+    
+    $stmt->close();
 
-if (!$ok) {
+    // return the created account
+    $res = $conn->prepare("SELECT platformNumber, platform, availableAssets FROM accounts WHERE id = ?");
+    
+    if ($res === false) {
+        throw new Exception('Failed to prepare select statement: ' . $conn->error);
+    }
+    
+    $lastId = $conn->insert_id;
+    $res->bind_param("i", $lastId);
+    
+    if (!$res->execute()) {
+        $res->close();
+        throw new Exception('Failed to retrieve created account: ' . $res->error);
+    }
+    
+    $r = $res->get_result()->fetch_assoc();
+    $res->close();
+    
+    if (!$r) {
+        throw new Exception('Account created but could not be retrieved');
+    }
+    
+    echo json_encode($r);
+    
+} catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Failed to create account']);
-    exit;
+    echo json_encode(['error' => 'Server error: ' . $e->getMessage()]);
 }
-
-// return the created account
-$res = $conn->prepare("SELECT platformNumber, platform, availableAssets FROM accounts WHERE id = ?");
-$lastId = $conn->insert_id;
-$res->bind_param("i", $lastId);
-$res->execute();
-$r = $res->get_result()->fetch_assoc();
-$res->close();
-
-echo json_encode($r);
 ?>

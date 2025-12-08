@@ -1,47 +1,54 @@
+<?php
+require_once '../../Backend/auth_check.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyMoney Tracker Transactions</title>
-    
+    <title>MyMoney Tracker</title>
+    <!-- 1. Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/lucide-icons"></script>
-    <link rel="stylesheet" href="transactionPage.css">
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary-green': '#598d47',
-                        'dark-green': '#385d2c',
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- 2. Load Vue.js (v3) -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- 3. Load Chart.js for the graph -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+    <!-- 4. Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide-icons"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="homePage.css">
+    
+    <!-- Client-side authentication check -->
+    <script src="../js/auth-check.js"></script>
     <style>
+        /* hide number input spinners for initial assets */
         input[type=number].no-spin::-webkit-outer-spin-button,
         input[type=number].no-spin::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-        input[type=number].no-spin { appearance: textfield; -moz-appearance: textfield; }
+    input[type=number].no-spin { appearance: textfield; -moz-appearance: textfield; }
     </style>
+    
+    <!-- Client-side authentication check -->
+    <script src="../js/auth-check.js"></script>
 </head>
 <body class="bg-gray-100">
 
+    <!-- This is the main Vue.js application container -->
     <div id="app" class="flex h-screen">
 
-        <!-- LEFT SIDEBAR NAV -->
+        <!-- ===== 1. Left Sidebar Navigation ===== -->
         <nav class="w-64 bg-white p-6 shadow-lg flex-shrink-0">
             <!-- Logo -->
             <div class="flex items-center space-x-3 mb-10">
                 <div class="logo-container w-200 h-200 flex items-center justify-center rounded-full">
-                    <a href="../homePage/homePage.html"><img src="../Images/Logo.svg" alt="MyMoney Tracker Logo" class="w-200 h-200"></a>
+                    <img src="../Images/Logo.svg" alt="MyMoney Tracker Logo" class="w-200 h-200">
                 </div>
                 <span class="text-xl font-bold text-gray-800">My<span class="text-green-600">Money</span> Tracker</span>
             </div>
@@ -62,42 +69,77 @@
                 </li>
             </ul>
         </nav>
-        
-        <!-- MAIN CONTENT -->
-        <main class="flex-1 p-8 overflow-y-auto">
-            <h1 class="text-3xl font-bold text-gray-800 mb-8">Transactions Overview</h1>
 
+        <!-- ===== 2. Main Content Area ===== -->
+        <main class="flex-1 p-8 overflow-y-auto">
+
+
+            <!-- Greeting -->
+            <div class="mb-6">
+                <h1 class="text-2xl font-semibold text-gray-800">Hello, <span class="text-green-600 font-semibold">{{ userName }}</span>!</h1>
+            </div>
+
+            <!-- Top Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Total Money -->
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <span class="text-gray-500 text-sm">Total Money</span>
+                    <div class="flex items-center justify-between mt-2 w-full">
+    <span class="font-bold text-gray-800 text-[clamp(0.75rem, 6vw, 2.5rem)] leading-tight">
+        {{ formatCurrency(totalMoney) }}
+    </span>
+</div>
+
+
+                </div>
                 <!-- This Month's Income -->
                 <div class="bg-white p-6 rounded-lg shadow-sm">
                     <span class="text-gray-500 text-sm">This Month's Income</span>
                     <div class="flex items-center justify-between mt-2 w-full">
-                        <span class="font-bold text-gray-800 text-[clamp(0.75rem, 6vw, 2.5rem)] leading-tight">
-                            {{ formatCurrency(totalIncome) }}
-                        </span>
-                    </div>
+    <span class="font-bold text-gray-800 text-[clamp(0.75rem, 6vw, 2.5rem)] leading-tight">
+        {{ formatCurrency(monthlyIncome) }}
+    </span>
+</div>
+
+
                 </div>
-                <!-- This Month's Expense -->
+                <!-- Expenses this month -->
                 <div class="bg-white p-6 rounded-lg shadow-sm">
-                    <span class="text-gray-500 text-sm">This Month's Expense</span>
+                    <span class="text-gray-500 text-sm">Expenses this month</span>
                     <div class="flex items-center justify-between mt-2 w-full">
-                        <span class="font-bold text-gray-800 text-[clamp(0.75rem, 6vw, 2.5rem)] leading-tight">
-                            {{ formatCurrency(totalExpense) }}
-                        </span>
-                    </div>
-                </div>
-                <!-- Transfers this month -->
-                <div class="bg-white p-6 rounded-lg shadow-sm">
-                    <span class="text-gray-500 text-sm">Transfers this month</span>
-                    <div class="flex items-center justify-between mt-2 w-full">
-                        <span class="font-bold text-gray-800 text-[clamp(0.75rem, 6vw, 2.5rem)] leading-tight">
-                            {{ formatCurrency(totalTransfer) }}
-                        </span>
-                    </div>
+    <span class="font-bold text-gray-800 text-[clamp(0.75rem, 6vw, 2.5rem)] leading-tight">
+        {{ formatCurrency(monthlyExpenses) }}
+    </span>
+</div>
+
                 </div>
             </div>
 
+            <!-- Spending Report -->
+            <div class="bg-white p-6 rounded-lg shadow-sm mb-8"> <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">Spending Report</h2>
+        <select v-model="spendingReport.activeFilter" @change="setSpendingFilter(spendingReport.activeFilter)" class="px-3 py-1 text-sm rounded-md border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+            <option v-for="filter in spendingFilters" :key="filter" :value="filter">
+                {{ filter }}
+            </option>
+        </select>
+    </div>
+    <div class="relative h-80 w-full"> <canvas id="spendingChart"></canvas>
+    </div>
+</div>
+
+            <!-- Transaction History -->
             <div class="bg-white p-6 rounded-lg shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Transaction History</h2>
+                    <div class="button-container">
+                        <button @click="goToRecordPage" class="button button-green">
+                            <i data-lucide="plus" class="button-icon"></i>
+                             <span class="button-text">+ Add Record</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Tabs -->
                 <div class="flex border-b border-gray-200 mb-6">
                     <button
@@ -105,6 +147,7 @@
                         :key="tab.key"
                         @click="activeTab = tab.key"
                         :class="[
+
                             'px-4 py-2 text-base font-medium transition-colors',
                             activeTab === tab.key 
                                 ? 'border-b-2 border-green-600 text-green-700' 
@@ -114,26 +157,25 @@
                         {{ tab.label }}
                     </button>
                 </div>
-                
+
                 <!-- Filter and Add Record Button -->
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex space-x-4 items-center">
                         <span class="font-semibold text-gray-700">Filter by:</span>
                         <select v-model="filterAccount" class="p-2 border border-gray-300 rounded-lg text-sm">
                             <option value="">All Accounts</option>
-                            <option v-for="acc in accounts" :key="acc.platformNumber" :value="acc.platform">{{ acc.platform }}</option>
+                            <option v-for="acc in accounts" :key="acc.platformNumber" :value="acc.platform">
+                                {{ acc.platform }}
+                            </option>
                         </select>
                         <select v-model="filterMonth" class="p-2 border border-gray-300 rounded-lg text-sm">
                             <option value="">All Months</option>
-                            <option v-for="month in availableMonths" :key="month" :value="month">{{ month }}</option>
+                            <option v-for="month in availableMonths" :key="month" :value="month">
+                                {{ month }}
+                            </option>
                         </select>
                     </div>
-                    <button @click="goToRecordPage" class="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition">
-                        <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
-                        + Add Record
-                    </button>
                 </div>
-                <!-- Add Record modal removed; button now navigates to the record page -->
 
                 <!-- Expense Tab -->
                 <div v-if="activeTab === 'expense'">
@@ -141,7 +183,7 @@
                         No expense records yet.
                     </div>
                     <div v-for="(tx, index) in filteredExpenseTransactions" :key="index"
-                        class="grid grid-cols-12 gap-4 items-center bg-gray-50 p-4 rounded-lg hover:shadow-sm transition">
+                        class="grid grid-cols-12 gap-4 items-center bg-gray-50 p-4 rounded-lg hover:shadow-sm transition mb-2">
                         <div class="col-span-4 flex items-center space-x-3">
                             <div class="w-8 h-8 rounded-full flex items-center justify-center bg-red-100">
                                 <i data-lucide="shopping-cart" class="w-4 h-4 text-red-600"></i>
@@ -160,7 +202,7 @@
                         No income records yet.
                     </div>
                     <div v-for="(tx, index) in filteredIncomeTransactions" :key="index"
-                        class="grid grid-cols-12 gap-4 items-center bg-gray-50 p-4 rounded-lg hover:shadow-sm transition">
+                        class="grid grid-cols-12 gap-4 items-center bg-gray-50 p-4 rounded-lg hover:shadow-sm transition mb-2">
                         <div class="col-span-4 flex items-center space-x-3">
                             <div class="w-8 h-8 rounded-full flex items-center justify-center bg-green-100">
                                 <i data-lucide="banknote" class="w-4 h-4 text-green-600"></i>
@@ -179,7 +221,7 @@
                         No transfer records yet.
                     </div>
                     <div v-for="(tx, index) in filteredTransferTransactions" :key="index"
-                        class="grid grid-cols-12 gap-4 items-center bg-gray-50 p-4 rounded-lg hover:shadow-sm transition">
+                        class="grid grid-cols-12 gap-4 items-center bg-gray-50 p-4 rounded-lg hover:shadow-sm transition mb-2">
                         <div class="col-span-4 flex items-center space-x-3">
                             <div class="w-8 h-8 rounded-full flex items-center justify-center bg-blue-100">
                                 <i data-lucide="arrow-right-left" class="w-4 h-4 text-blue-600"></i>
@@ -194,21 +236,24 @@
                     </div>
                 </div>
             </div>
+
         </main>
-        
-        <!-- RIGHT SIDEBAR - MY ACCOUNTS -->
+
+        <!-- ===== 3. Right Sidebar (My Card) ===== -->
         <aside class="w-65 bg-white p-8 shadow-lg flex-shrink-0 hidden lg:block">
-            <div class="flex justify-between items-center mb-3">
+           <div class="flex justify-between items-center mb-3">
                 <h2 class="text-xl font-semibold text-gray-800">My Accounts</h2>
             </div>
             <div class="flex justify-between items-center mb-4">
                 <button @click="openAddAccount" class="text-sm text-green-600 font-medium hover:text-green-700 transition">+ Add Accounts</button>
             </div>
+            
+
             <div class="space-y-4">
                 <div v-for="account in accounts" :key="account.platformNumber" 
-                     @click="selectAccount(account.platformNumber)"
+                     @click="selectAccountForRemove(account.platformNumber)"
                      :class="['p-5 border rounded-xl hover:shadow-md transition-shadow cursor-pointer', 
-                              selectedAccount === account.platformNumber ? 'border-red-300 bg-red-50' : 'border-gray-100']">
+                              selectedForRemove === account.platformNumber ? 'border-red-300 bg-red-50' : 'border-gray-100']">
                     <div class="flex justify-between items-start mb-2">
                         <span class="font-bold text-gray-800">{{ account.platform }}</span>
                         <i data-lucide="wallet" class="w-5 h-5 text-gray-400"></i>
@@ -216,10 +261,10 @@
                     <div class="flex justify-between items-end">
                         <div>
                             <span class="text-xs text-gray-400 block">Balance</span>
-                            <span class="text-lg font-bold text-green-600">{{ formatCurrency(account.availableAssets) }}</span>
+                            <span class="text-lg font-bold text-green-600"> {{ formatCurrency(account.availableAssets) }}</span>
                         </div>
                     </div>
-                    <button v-if="selectedAccount === account.platformNumber" 
+                    <button v-if="selectedForRemove === account.platformNumber" 
                             @click.stop="openRemoveAccountModal(account.platformNumber, account.platform)" 
                             class="mt-3 text-sm text-white bg-red-600 px-3 py-1 rounded hover:bg-red-700 transition w-full">Remove</button>
                 </div>
@@ -272,8 +317,11 @@
                 </div>
             </div>
         </div>
+
     </div>
 
-    <script src="transactionPage.js"></script>
+    <!-- ===== Vue.js Application Script ===== -->
+    <script src="homePage.js"></script>
 </body>
 </html>
+

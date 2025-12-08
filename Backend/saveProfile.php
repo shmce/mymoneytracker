@@ -44,29 +44,33 @@ if ($email !== null && $email !== '' && !filter_var($email, FILTER_VALIDATE_EMAI
 
 $userId = $_SESSION['user_id'];
 
-// Update statement - store first_name and last_name separately
-$sql = "UPDATE users SET first_name = ?, last_name = ?, email = ?, gender = ?, dob = ? WHERE id = ?";
-$stmt = $conn->prepare($sql);
-if (!$stmt) {
-    http_response_code(500);
-    echo json_encode(['error' => 'DB prepare failed']);
-    exit;
-}
-$stmt->bind_param('sssssi', $first_name, $last_name, $email, $gender, $dob, $userId);
-$exec = $stmt->execute();
-if (!$exec) {
-    http_response_code(500);
-    echo json_encode(['error' => 'DB update failed']);
+try {
+    // Update statement - store first_name and last_name separately
+    $sql = "UPDATE users SET first_name = ?, last_name = ?, email = ?, gender = ?, dob = ? WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    
+    if ($stmt === false) {
+        throw new Exception('Failed to prepare update statement: ' . $conn->error);
+    }
+    
+    $stmt->bind_param('sssssi', $first_name, $last_name, $email, $gender, $dob, $userId);
+    
+    if (!$stmt->execute()) {
+        $stmt->close();
+        throw new Exception('Failed to update profile: ' . $stmt->error);
+    }
+    
     $stmt->close();
-    exit;
+
+    // Update session cache for name parts
+    $_SESSION['first_name'] = $first_name;
+    $_SESSION['last_name'] = $last_name;
+    $_SESSION['name'] = trim($first_name . ' ' . $last_name);
+
+    echo json_encode(['success' => true, 'message' => 'Profile updated successfully']);
+    
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Server error: ' . $e->getMessage()]);
 }
-
-$stmt->close();
-
-// Update session cache for name parts
-$_SESSION['first_name'] = $first_name;
-$_SESSION['last_name'] = $last_name;
-$_SESSION['name'] = trim($first_name . ' ' . $last_name);
-
-echo json_encode(['success' => true]);
 ?>

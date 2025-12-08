@@ -1,9 +1,13 @@
+<?php
+require_once '../../Backend/auth_check.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transactions - MyMoney Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="../Images/Logo.svg">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -14,6 +18,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/confirmDate/confirmDate.css">
     
     <link rel="stylesheet" href="recordPage.css">
+    
+    <!-- Client-side authentication check -->
+    <script src="../js/auth-check.js"></script>
     <style>
         input[type=number].no-spin::-webkit-outer-spin-button,
         input[type=number].no-spin::-webkit-inner-spin-button {
@@ -32,7 +39,7 @@
             <!-- Logo -->
             <div class="flex items-center space-x-3 mb-10">
                 <div class="logo-container w-200 h-200 flex items-center justify-center rounded-full">
-                    <a href="../homePage/homePage.html"><img src="../Images/Logo.svg" alt="MyMoney Tracker Logo" class="w-200 h-200"></a>
+                    <a href="../homePage/homePage.php"><img src="../Images/Logo.svg" alt="MyMoney Tracker Logo" class="w-200 h-200"></a>
                 </div>
                 <span class="text-xl font-bold text-gray-800">My<span class="text-green-600">Money</span> Tracker</span>
             </div>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <link rel="icon" type="image/svg+xml" href="../Images/Logo.svg">
     <!-- Load Tailwind CSS for utility-first styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load Vue.js -->
@@ -55,35 +56,38 @@
                 </div>
 
                 <!-- FORM SECTION -->
-                <form action="Login.php" method="POST" id="loginForm" @submit.prevent="handleLogin">
-                    <div class="space-y-6">
-                        <!-- Email Input -->
-                        <div class="space-y-2">
-                            <label for="email" class="text-sm font-semibold block text-gray-300">EMAIL ADDRESS</label>
-                            <input type="email" v-model="email" id="email" name="email" placeholder="name@domain.com" class="custom-input" required>
-                        </div>
+                <!-- REPLACE THE ENTIRE <form ...> in Login.html -->
+<form action="Login.php" method="POST" id="loginForm" @submit.prevent="handleLogin">
+    <div class="space-y-6">
+        <div class="space-y-2">
+            <label for="email" class="text-sm font-semibold block text-gray-300">EMAIL ADDRESS</label>
+            <input type="email" v-model="email" id="email" name="email" placeholder="name@domain.com" class="custom-input" required>
+        </div>
 
-                        <!-- Password Input -->
-                        <div class="space-y-2">
-                            <label for="password" class="text-sm font-semibold block text-gray-300">PASSWORD</label>
-                            <div class="password-input-group">
-                                <input :type="passwordVisible ? 'text' : 'password'" v-model="password" id="password-input" name="password" placeholder="••••••••••••" class="custom-input" required>
-                                <!-- Eye Icon SVG for show/hide functionality -->
-                                <svg @click="togglePasswordVisibility" class="password-toggle-icon w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path v-if="!passwordVisible" d="M2.06 12C3.76 7.42 8.5 4 12 4s8.24 3.42 9.94 8c-1.7 4.58-6.44 8-9.94 8s-8.24-3.42-9.94-8z"></path>
-                                    <path v-else d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-4.58 0-8.24-3.42-9.94-8a10.07 10.07 0 0 1 1.94-4.88M12 4c4.58 0 8.24 3.42 9.94 8a10.07 10.07 0 0 1-1.94 4.88"></path>
-                                    <line v-if="passwordVisible" x1="1" y1="1" x2="23" y2="23"></line>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
-                            </div>
-                        </div>
-                        <br>
-                        <!-- Login Button -->
-                        <button type="submit" class="w-full bg-[--primary-green] text-white p-3 font-semibold rounded-lg shadow-lg transition duration-200 hover:bg-green-600">
-                            Log In
-                        </button>
-                    </div>
-                </form>
+        <div class="space-y-2">
+            <label for="password" class="text-sm font-semibold block text-gray-300">PASSWORD</label>
+            <div class="password-input-group">
+                <input :type="passwordVisible ? 'text' : 'password'" v-model="password" id="password-input" name="password" placeholder="••••••••••••" class="custom-input" required>
+                <svg @click="togglePasswordVisibility" class="password-toggle-icon w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path v-if="!passwordVisible" d="M2.06 12C3.76 7.42 8.5 4 12 4s8.24 3.42 9.94 8c-1.7 4.58-6.44 8-9.94 8s-8.24-3.42-9.94-8z"></path>
+                    <path v-else d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-4.58 0-8.24-3.42-9.94-8a10.07 10.07 0 0 1 1.94-4.88M12 4c4.58 0 8.24 3.42 9.94 8a10.07 10.07 0 0 1-1.94 4.88"></path>
+                    <line v-if="passwordVisible" x1="1" y1="1" x2="23" y2="23"></line>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </div>
+        </div>
+
+        <!-- REMEMBER ME -->
+        <label class="flex items-center text-sm text-gray-300">
+            <input type="checkbox" name="remember" value="1" class="mr-2">
+            Remember me for 30 days
+        </label>
+
+        <button type="submit" class="w-full bg-[--primary-green] text-white p-3 font-semibold rounded-lg shadow-lg transition duration-200 hover:bg-green-600">
+            Log In
+        </button>
+    </div>
+</form>
                     
                     <p class="text-sm text-gray-400">
                         Don't have an account?

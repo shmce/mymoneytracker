@@ -1,20 +1,39 @@
 <?php
 require_once 'db_connect.php';   // session_start() + $conn
 
+header('Content-Type: application/json');
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
-    die(json_encode(['error' => 'Unauthorized']));
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
 }
 
-$stmt = $conn->prepare("SELECT platformNumber, platform, availableAssets
-                        FROM accounts
-                        WHERE user_id = ?
-                        ORDER BY platform");
-$stmt->bind_param("i", $_SESSION['user_id']);
-$stmt->execute();
-$res = $stmt->get_result();
-
-header('Content-Type: application/json');
-echo json_encode($res->fetch_all(MYSQLI_ASSOC));
-$stmt->close();
+try {
+    $stmt = $conn->prepare("SELECT platformNumber, platform, availableAssets
+                            FROM accounts
+                            WHERE user_id = ?
+                            ORDER BY platform");
+    
+    if ($stmt === false) {
+        throw new Exception('Failed to prepare query: ' . $conn->error);
+    }
+    
+    $stmt->bind_param("i", $_SESSION['user_id']);
+    
+    if (!$stmt->execute()) {
+        $stmt->close();
+        throw new Exception('Failed to execute query: ' . $stmt->error);
+    }
+    
+    $res = $stmt->get_result();
+    $accounts = $res->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+    
+    echo json_encode($accounts);
+    
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Server error: ' . $e->getMessage()]);
+}

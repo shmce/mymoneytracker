@@ -12,49 +12,39 @@ createApp({
         };
     },
     mounted() {
-        // Check for error parameter in URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const err = urlParams.get('error');
-        if (err === 'invalid') {
-            this.displayMessage('Wrong email or password. Please try again.', 5000);
-        } else if (err === 'pwd_invalid' || err === 'pwd_short' || err === 'pwd_chars') {
-            this.displayMessage('Password invalid. It must be at least 8 characters and only contain letters, numbers, and . - _ ? ! $.', 6000);
+        // Auto-fill email from cookie
+        const saved = document.cookie
+            .split("; ")
+            .find(row => row.startsWith("user_email="));
+        if (saved) this.email = decodeURIComponent(saved.split("=")[1]);
+
+        // Error flash from PHP
+        const url = new URLSearchParams(window.location.search);
+        if (url.get("error") === "invalid") {
+            this.displayMessage("Wrong email or password.", 5000);
         }
     },
     methods: {
         togglePasswordVisibility() {
             this.passwordVisible = !this.passwordVisible;
         },
-        displayMessage(message, duration = 3000) {
-            this.message = message;
+        displayMessage(msg, ms = 3000) {
+            this.message = msg;
             this.showMessage = true;
-            if (this.messageTimeout) {
-                clearTimeout(this.messageTimeout);
-            }
-            this.messageTimeout = setTimeout(() => {
-                this.showMessage = false;
-            }, duration);
+            clearTimeout(this.messageTimeout);
+            this.messageTimeout = setTimeout(() => this.showMessage = false, ms);
         },
-
-        // Validate password client-side on login submit
-        handleLogin(event) {
-            // event is the submit event from the form because we used @submit.prevent
-            const pwd = this.password || '';
-            // Require at least 8 characters
+        handleLogin(e) {
+            const pwd = this.password;
             if (pwd.length < 8) {
-                this.displayMessage('Password must be at least 8 characters long.', 4000);
-                return; // prevent submission
+                this.displayMessage("Password must be ≥ 8 characters.", 4000);
+                return;
             }
-
-            // Allow only alphanumeric and these special characters: . - _ ? ! $
-            const allowedRegex = /^[A-Za-z0-9.\-_\?\!\$]+$/;
-            if (!allowedRegex.test(pwd)) {
-                this.displayMessage('Password contains invalid characters. Only letters, numbers and the characters . - _ ? ! $ are allowed.', 6000);
-                return; // prevent submission
+            if (!/^[A-Za-z0-9.\-_\?\!\$]+$/.test(pwd)) {
+                this.displayMessage("Invalid characters in password.", 4000);
+                return;
             }
-
-            // If validation passes, submit the form
-            event.target.submit();
-        },
+            e.target.submit();
+        }
     }
 }).mount('#app');

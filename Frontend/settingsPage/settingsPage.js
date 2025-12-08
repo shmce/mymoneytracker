@@ -56,11 +56,11 @@ createApp({
         const setActiveNav = (name) => {
             activeNav.value = name;
             if (name === 'Dashboard') {
-                window.location.href = '../homePage/homePage.html';
+                window.location.href = '../homePage/homePage.php';
             } else if (name === 'Records') {
-                window.location.href = '../recordPage/recordPage.html';
+                window.location.href = '../recordPage/recordPage.php';
             } else if (name === 'Transactions') {
-                window.location.href = '../transactionPage/transactionPage.html';
+                window.location.href = '../transactionPage/transactionPage.php';
             }
         };
 
@@ -164,31 +164,74 @@ createApp({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ platformNumber: accountToRemove.value })
                 });
+                
+                let errorMsg = 'Error removing account';
                 if (!res.ok) {
-                    alert('Error removing account');
+                    try {
+                        const data = await res.json();
+                        if (data && data.error) errorMsg = data.error;
+                    } catch (e) {
+                        errorMsg = res.statusText || errorMsg;
+                    }
+                    alert(errorMsg);
                     return;
                 }
+                
+                try {
+                    const data = await res.json();
+                    if (data && data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                } catch (e) {
+                    // Response might not be JSON, continue if status is OK
+                }
+                
                 closeRemoveAccountModal();
                 selectedForRemove.value = '';
                 await loadAccountsFromServer();
             } catch (err) {
                 console.error('Remove account error:', err);
-                alert('Error removing account');
+                const msg = (err && err.message) ? err.message : 'Network error. Please check your connection.';
+                alert('Error removing account: ' + msg);
             }
         };
 
         const saveNewAccount = async ()=>{
-            if (!newAccount.platform) { alert('Please enter an account name.'); return; }
-            const payload = { platform: newAccount.platform, platformNumber: newAccount.platformNumber || '', availableAssets: Number(newAccount.availableAssets) || 0 };
+            if (!newAccount.platform) { 
+                alert('Please enter an account name.'); 
+                return; 
+            }
+            const payload = { 
+                platform: newAccount.platform, 
+                platformNumber: newAccount.platformNumber || '', 
+                availableAssets: Number(newAccount.availableAssets) || 0 
+            };
             try {
-                const res = await fetch('../../Backend/addAccount.php', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-                let data;
-                try { data = await res.json(); } catch(e) { data = null; }
+                const res = await fetch('../../Backend/addAccount.php', { 
+                    method: 'POST', 
+                    credentials: 'include', 
+                    headers: {'Content-Type':'application/json'}, 
+                    body: JSON.stringify(payload) 
+                });
+                
+                let data = null;
+                let errorMsg = 'Could not save account';
+                
+                try { 
+                    data = await res.json(); 
+                } catch(e) { 
+                    if (!res.ok) {
+                        errorMsg = res.statusText || `Server returned ${res.status}`;
+                        alert('Could not save account: ' + errorMsg);
+                        return;
+                    }
+                }
 
                 if (!res.ok) {
-                    const msg = (data && data.error) ? data.error : `Server returned ${res.status}`;
-                    alert('Could not save account: ' + msg);
-                    console.warn('Add account failed', res.status, data);
+                    errorMsg = (data && data.error) ? data.error : `Server returned ${res.status}`;
+                    alert('Could not save account: ' + errorMsg);
+                    console.error('Add account failed', res.status, data);
                     return;
                 }
 
@@ -196,13 +239,14 @@ createApp({
                     await loadAccountsFromServer();
                     showAddAccount.value=false;
                 } else {
-                    const msg = (data && data.error) ? data.error : 'Unexpected server response';
-                    alert('Could not save account: ' + msg);
-                    console.warn('Unexpected add account response', data);
+                    errorMsg = (data && data.error) ? data.error : 'Unexpected server response';
+                    alert('Could not save account: ' + errorMsg);
+                    console.error('Unexpected add account response', data);
                 }
             } catch (e) {
-                console.error(e);
-                alert('Error saving account. Check your connection or server.');
+                console.error('Error saving account:', e);
+                const msg = (e && e.message) ? e.message : 'Network error. Please check your connection.';
+                alert('Error saving account: ' + msg);
             }
         };
 
@@ -210,10 +254,20 @@ createApp({
         const loadAccountsFromServer = async () => {
             try {
                 const res = await fetch('../../Backend/getAccounts.php', { credentials: 'include' });
-                if (!res.ok) throw new Error('Failed to load accounts');
+                if (!res.ok) {
+                    let errorMsg = 'Failed to load accounts';
+                    try {
+                        const data = await res.json();
+                        if (data && data.error) errorMsg = data.error;
+                    } catch (e) {
+                        errorMsg = res.statusText || errorMsg;
+                    }
+                    throw new Error(errorMsg);
+                }
                 accounts.value = await res.json();
             } catch (e) {
-                console.warn('Could not load accounts from server', e);
+                console.error('Could not load accounts from server', e);
+                accounts.value = [];
             }
         };
 
@@ -222,11 +276,23 @@ createApp({
             try {
                 const res = await fetch('../../Backend/getProfile.php', { credentials: 'include' });
                 if (!res.ok) {
-                    console.warn('Failed to load profile', res.status);
+                    let errorMsg = 'Failed to load profile';
+                    try {
+                        const data = await res.json();
+                        if (data && data.error) errorMsg = data.error;
+                    } catch (e) {
+                        errorMsg = res.statusText || errorMsg;
+                    }
+                    console.error('Failed to load profile:', errorMsg);
                     return;
                 }
                 const data = await res.json();
-                if (!data || data.error) return;
+                if (!data || data.error) {
+                    if (data && data.error) {
+                        console.error('Profile error:', data.error);
+                    }
+                    return;
+                }
 
                 // Populate explicit first/last fields and fullName
                 form.firstName = data.first_name || '';

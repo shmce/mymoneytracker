@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <title>MyMoney Tracker - Sign Up</title>
+    <link rel="icon" type="image/svg+xml" href="../Images/Logo.svg">
     
     <link rel="stylesheet" href="signUp.css">
 </head>
@@ -103,9 +104,9 @@
                         <div class="form-group">
                             <label>GENDER</label>
                             <div class="gender-group">
-                                <label><input type="radio" name="gender" value="male"> Male</label>
-                                <label><input type="radio" name="gender" value="female"> Female</label>
-                                <label><input type="radio" name="gender" value="other"> Other</label>
+                                <label><input type="radio" name="gender" value="male" required> Male</label>
+                                <label><input type="radio" name="gender" value="female" required> Female</label>
+                                <label><input type="radio" name="gender" value="other" required> Other</label>
                             </div>
                         </div>
 
@@ -155,6 +156,12 @@
                     const method = (form.method || 'POST').toUpperCase();
                     const formData = new FormData(form);
 
+                    // Require gender selection before submitting
+                    if (!formData.get('gender')) {
+                        alert('Please select a gender before registering.');
+                        return;
+                    }
+
                     try {
                         const res = await fetch(action, {
                             method,
@@ -162,17 +169,22 @@
                             credentials: 'same-origin'
                         });
 
-                        if (res.ok) {
+                        const text = await res.text().catch(() => 'Server error');
+                        
+                        if (res.ok && text.trim() === 'success') {
                             // Mark this as a new user
                             localStorage.setItem('isNewUser', 'true');
                             // Clear any existing accounts
                             localStorage.removeItem('myMoneyAccounts');
-                            // Redirect to login page
-                            window.location.href = '../loginPage/Login.html';
+                            // Redirect to home page (user is auto-logged in)
+                            window.location.href = '../homePage/homePage.php';
                         } else {
-                            // simple error handling; you can expand this
-                            const text = await res.text().catch(()=> 'Server error');
-                            alert('Sign up failed: ' + text);
+                            // Extract clean error message (remove any HTML tags)
+                            let errorMsg = text.replace(/<[^>]*>/g, '').trim();
+                            if (!errorMsg || errorMsg === 'Server error') {
+                                errorMsg = 'Sign up failed. Please try again.';
+                            }
+                            alert('Sign up failed: ' + errorMsg);
                         }
                     } catch (err) {
                         alert('Network error. Please try again.');

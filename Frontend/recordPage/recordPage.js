@@ -14,10 +14,10 @@ createApp({
         // Navigation click handler
         function setActiveNav(item) {
             activeNav.value = item;
-            if (item === 'Dashboard') window.location.href = '../homePage/homePage.html';
-            if (item === 'Records') window.location.href = '../recordPage/recordPage.html';
-            if (item === 'Transactions') window.location.href = '../transactionPage/transactionPage.html';
-            if (item === 'Settings') window.location.href = '../settingsPage/settingsPage.html';
+            if (item === 'Dashboard') window.location.href = '../homePage/homePage.php';
+            if (item === 'Records') window.location.href = '../recordPage/recordPage.php';
+            if (item === 'Transactions') window.location.href = '../transactionPage/transactionPage.php';
+            if (item === 'Settings') window.location.href = '../settingsPage/settingsPage.php';
         }
 
         // Tabs and input state
@@ -82,17 +82,55 @@ createApp({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ platformNumber: accountToRemove.value })
                 });
+                
+                let errorMsg = 'Error removing account';
                 if (!res.ok) {
-                    alert('Error removing account');
+                    try {
+                        const data = await res.json();
+                        if (data && data.error) errorMsg = data.error;
+                    } catch (e) {
+                        errorMsg = res.statusText || errorMsg;
+                    }
+                    alert(errorMsg);
                     return;
                 }
+                
+                try {
+                    const data = await res.json();
+                    if (data && data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                } catch (e) {
+                    // Response might not be JSON, continue if status is OK
+                }
+                
                 closeRemoveAccountModal();
                 selectedForRemove.value = '';
-                const r2 = await fetch('../../Backend/getAccounts.php', { credentials: 'include' });
-                if (r2.ok) accounts.value = await r2.json();
+                try {
+                    const r2 = await fetch('../../Backend/getAccounts.php', { credentials: 'include' });
+                    if (r2.ok) {
+                        const json = await r2.json();
+                        if (Array.isArray(json)) {
+                            accounts.value = json;
+                        }
+                    } else {
+                        let errorMsg = 'Failed to reload accounts';
+                        try {
+                            const data = await r2.json();
+                            if (data && data.error) errorMsg = data.error;
+                        } catch (e) {
+                            errorMsg = r2.statusText || errorMsg;
+                        }
+                        console.warn('Account removed but failed to reload accounts list:', errorMsg);
+                    }
+                } catch (e) {
+                    console.warn('Account removed but failed to reload accounts list:', e);
+                }
             } catch (err) {
                 console.error('Remove account error:', err);
-                alert('Error removing account');
+                const msg = (err && err.message) ? err.message : 'Network error. Please check your connection.';
+                alert('Error removing account: ' + msg);
             }
         };
 
@@ -113,17 +151,54 @@ createApp({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                if (!res.ok) throw new Error('Failed to add account');
+                
+                let errorMsg = 'Failed to add account';
+                if (!res.ok) {
+                    try {
+                        const data = await res.json();
+                        if (data && data.error) errorMsg = data.error;
+                    } catch (e) {
+                        errorMsg = res.statusText || errorMsg;
+                    }
+                    throw new Error(errorMsg);
+                }
+                
                 const acc = await res.json();
+                if (acc && acc.error) {
+                    alert('Could not add account: ' + acc.error);
+                    return;
+                }
+                
                 if (acc && acc.platformNumber) {
                     // reload accounts from server
-                    const r2 = await fetch('../../Backend/getAccounts.php', { credentials: 'include' });
-                    if (r2.ok) accounts.value = await r2.json();
+                    try {
+                        const r2 = await fetch('../../Backend/getAccounts.php', { credentials: 'include' });
+                        if (r2.ok) {
+                            const json = await r2.json();
+                            if (Array.isArray(json)) {
+                                accounts.value = json;
+                            }
+                        } else {
+                            let errorMsg = 'Failed to reload accounts';
+                            try {
+                                const data = await r2.json();
+                                if (data && data.error) errorMsg = data.error;
+                            } catch (e) {
+                                errorMsg = r2.statusText || errorMsg;
+                            }
+                            console.warn('Account added but failed to reload accounts list:', errorMsg);
+                        }
+                    } catch (e) {
+                        console.warn('Account added but failed to reload accounts list:', e);
+                    }
                     showAddAccount.value = false;
+                } else {
+                    alert('Unexpected server response when adding account');
                 }
             } catch (e) {
                 console.error('add account error', e);
-                alert('Could not add account');
+                const msg = (e && e.message) ? e.message : 'Network error. Please check your connection.';
+                alert('Could not add account: ' + msg);
             }
         }
 
@@ -166,9 +241,25 @@ createApp({
                 const res = await fetch('../../Backend/getAccounts.php', { credentials: 'include' });
                 if (res.ok) {
                     const json = await res.json();
-                    if (Array.isArray(json)) accounts.value = json;
+                    if (Array.isArray(json)) {
+                        accounts.value = json;
+                    } else if (json && json.error) {
+                        console.error('Error loading accounts:', json.error);
+                    }
+                } else {
+                    let errorMsg = 'Failed to load accounts';
+                    try {
+                        const data = await res.json();
+                        if (data && data.error) errorMsg = data.error;
+                    } catch (e) {
+                        errorMsg = res.statusText || errorMsg;
+                    }
+                    console.error('Could not load accounts:', errorMsg);
                 }
-            } catch (e) { console.warn('Could not load accounts', e); }
+            } catch (e) { 
+                console.error('Could not load accounts', e);
+                accounts.value = [];
+            }
             // Initialize Flatpickr for date input
             if (window.flatpickr) {
                 flatpickr("#dateInput", {
